@@ -4,19 +4,18 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Terminal Fallout — V3.3 (FR • CRT)</title>
+    <title>Terminal Fallout — V5.3 (FR • CRT)</title>
     <style>
 
         :root {
-            /* si tu es en thème vert par défaut */
+
             --g: #7CFF91;
             --g-rgb: 124, 255, 145;
             --y: #FFD75E;
             --line: rgba(var(--g-rgb), .18);
-            /* ← était 25 => opaque ; .18 est bcp plus doux */
+
         }
 
-        /* si tu as un thème ambre */
         :root[data-theme="amber"] {
             --g: #FFC107;
             --g-rgb: 255, 193, 7;
@@ -24,6 +23,10 @@
             --line: rgba(var(--g-rgb), .16);
         }
 
+:root[data-theme="blue"]{
+  --g: #39c0ff;        
+  --g-rgb: 57,192,255;
+}
 
         html,
         body {
@@ -47,6 +50,9 @@
             border: 1px solid var(--line);
             border-radius: 10px;
             box-sizing: border-box;
+              overflow: hidden;
+  background-clip: padding-box;
+
         }
 
         .crt::before {
@@ -55,9 +61,12 @@
             inset: 0;
             pointer-events: none;
             z-index: 1;
-            background: radial-gradient(ellipse at center, rgba(var(--g-rgb), .14) 0%, rgba(var(--g-rgb), .10) 18%, rgba(var(--g-rgb), .06) 32%, rgba(var(--g-rgb), .03) 48%, rgba(0, 0, 0, 0) 62%);
-            filter: blur(0.2px);
-        }
+              background: radial-gradient(
+    ellipse at center,
+    rgba(var(--g-rgb), .14) 0%,
+    rgba(var(--g-rgb), .08) 35%,
+    rgba(0,0,0,0)          70%
+  ); }
 
         .crt,
         .crt * {
@@ -67,13 +76,20 @@
         }
 
         .crt::after {
-            content: "";
-            position: absolute;
-            inset: 0;
-            pointer-events: none;
-            z-index: 2;
-            background: repeating-linear-gradient(to bottom, rgba(var(--g-rgb), 0) 0 2px, rgba(0, 0, 0, .16) 3px, rgba(0, 0, 0, 0) 4px)
-        }
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 2;
+    background: repeating-linear-gradient(
+      to bottom,
+      rgba(255,255,255,.06) 0 1px,
+      rgba(0,0,0,0)         1px 3px
+    );
+    mix-blend-mode: soft-light;
+    opacity: .22;
+    border-radius: inherit;
+}
 
         @keyframes flicker {
 
@@ -205,9 +221,8 @@
             cursor: pointer
         }
 
-        .mlink:hover {
-            background: rgba(124, 255, 145, .12)
-        }
+       .mlink:hover { background: rgba(var(--g-rgb), .12) }
+        
 
         .hackwall {
             font-size: 14px;
@@ -234,13 +249,13 @@
         }
 
         .hackwall .w:hover {
-            background: rgba(124, 255, 145, .14);
+            background: rgba(var(--g-rgb), .14);
             outline-color: var(--y)
         }
 
         .triesBar {
             height: 6px;
-            background: rgba(124, 255, 145, .15);
+            background: rgba(var(--g-rgb), .15);
             border: 1px solid var(--line);
             border-radius: 4px;
             overflow: hidden;
@@ -298,21 +313,14 @@
             overflow: auto;
         }
 
-        /* scroll panneau MJ */
-
         body.glitch .crt {
             filter: contrast(1.05) saturate(1.05)
         }
 
-        body.glitch:before {
-            content: "";
-            position: fixed;
-            inset: 0;
-            pointer-events: none;
-            background: repeating-linear-gradient(transparent 0 2px, rgba(var(--g-rgb), 03) 2px 3px)
-        }
+body.glitch:before { content: none; }
 
-        /* ===== WYSIWYG (MJEditor) ===== */
+body.glitch .crt::after { opacity: .28; }
+
         .mj-editor {
             background: #000;
             border: 1px solid var(--line);
@@ -367,7 +375,7 @@
         }
 
         .mj-btn:hover {
-            background: rgba(124, 255, 145, .08)
+            background: rgba(var(--g-rgb), .08)
         }
 
         .mj-tabpage {
@@ -426,7 +434,7 @@
             padding: 2px 6px;
             border: 1px solid var(--line);
             border-radius: 6px;
-            background: rgba(124, 255, 145, .06)
+            background: rgba(var(--g-rgb), .06)
         }
 
         .mj-actions {
@@ -450,7 +458,7 @@
             padding: 6px 8px;
             border: 1px dashed var(--line);
             border-radius: 6px;
-            background: rgba(124, 255, 145, .06)
+            background: rgba(var(--g-rgb), .06)
         }
 
         .mj-muted {
@@ -468,7 +476,6 @@
             }
         }
 
-        /* ---------- MJ refresh (soft glass, cards, toggles) ---------- */
         #adminPanel.refresh {
             --panel-border: rgba(var(--g-rgb), .14);
             --panel-bg: rgba(0, 0, 0, .48);
@@ -476,7 +483,6 @@
             backdrop-filter: blur(6px);
         }
 
-        /* sections + entêtes */
         #adminPanel.refresh .h {
             display: flex;
             align-items: center;
@@ -491,7 +497,6 @@
             background: linear-gradient(180deg, var(--panel-ghost), transparent);
         }
 
-        /* cartes (groupes) */
         #adminPanel.refresh .box,
         #adminPanel.refresh .group,
         #adminPanel.refresh .panel,
@@ -503,7 +508,6 @@
             box-shadow: 0 6px 30px rgba(0, 0, 0, .25), inset 0 1px 0 rgba(255, 255, 255, .02);
         }
 
-        /* grille fluide des contrôles (uniquement colonne gauche des réglages) */
         #adminPanel.refresh .two> :first-child label {
             display: grid;
             grid-template-columns: 1fr minmax(240px, 320px);
@@ -516,7 +520,6 @@
             background: rgba(var(--g-rgb), .02);
         }
 
-        /* --- Ne pas appliquer les styles 'réglages' dans l'éditeur WYSIWYG --- */
         #adminPanel.refresh #wizRoot label {
             display: inline;
             border: 0;
@@ -525,7 +528,6 @@
             margin: 0;
         }
 
-        /* éviter les masques/chevauchements dans les items de liste */
         #adminPanel.refresh #wizRoot .mj-item {
             overflow: visible;
         }
@@ -535,8 +537,6 @@
             z-index: 2;
         }
 
-
-        /* champs */
         #adminPanel.refresh input[type="text"],
         #adminPanel.refresh input[type="password"],
         #adminPanel.refresh input[type="number"],
@@ -558,7 +558,6 @@
             box-shadow: 0 0 0 2px rgba(var(--g-rgb), .22), inset 0 0 0 1px rgba(var(--g-rgb), .05);
         }
 
-        /* switch (checkboxes du MJ) */
         #adminPanel.refresh input[type="checkbox"] {
             appearance: none;
             -webkit-appearance: none;
@@ -593,7 +592,6 @@
             left: 22px;
         }
 
-        /* boutons */
         #adminPanel.refresh .btn,
         #adminPanel.refresh .mj-btn,
         #adminPanel.refresh button {
@@ -621,7 +619,6 @@
             transform: translateY(1px);
         }
 
-        /* boutons secondaires “icône” */
         #adminPanel.refresh .btn.icon,
         #adminPanel.refresh button.icon {
             padding: 6px 8px;
@@ -630,7 +627,6 @@
             border-radius: 10px;
         }
 
-        /* encarts info */
         #adminPanel.refresh .mj-badge,
         #adminPanel.refresh .mj-note {
             border: 1px dashed var(--panel-border);
@@ -639,7 +635,6 @@
             padding: 8px 10px;
         }
 
-        /* items de la liste des menus */
         #adminPanel.refresh .menus .item {
             border: 1px solid var(--panel-border);
             border-radius: 12px;
@@ -652,14 +647,12 @@
             background: rgba(var(--g-rgb), .05);
         }
 
-        /* bouton Enregistrer */
         #adminPanel.refresh #saveSettings {
             position: relative;
             font-size: 14px;
             padding: 10px 14px;
         }
 
-        /* ===== Onglets du panneau MJ ===== */
         #adminPanel.refresh .admin-tabs {
             position: sticky;
             top: 8px;
@@ -707,6 +700,43 @@
             display: none !important;
         }
     </style>
+
+<style>
+#langAdminBlock{margin:12px 0;padding:10px;border:1px dashed var(--line);border-radius:8px}
+#langAdminBlock .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+#langAdminBlock .row .btn{padding:6px 10px;border:1px solid var(--line);background:rgba(var(--g-rgb),.06);border-radius:6px;cursor:pointer}
+#langAdminBlock .row .btn:hover{background:rgba(var(--g-rgb),.12)}
+#langAdminBlock .title{font-weight:600;margin-right:8px}
+</style>
+
+
+<style>
+#langAdminBlock{margin:12px 0;padding:10px;border:1px dashed var(--line);border-radius:8px}
+#langAdminBlock .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+#langAdminBlock label{font-weight:600}
+#adminLangSelect{padding:6px 10px;border:1px solid var(--line);background:rgba(var(--g-rgb),.06);border-radius:6px;cursor:pointer}
+#adminLangSelect:hover{background:rgba(var(--g-rgb),.12)}
+</style>
+
+
+<style>
+#adminFooterBar{
+  position: sticky; bottom: 0; z-index: 5;
+  display: flex; gap: 10px; justify-content: flex-end; align-items: center;
+  padding: 10px; margin-top: 12px;
+  background: linear-gradient(to top, rgba(0,0,0,.35), rgba(0,0,0,0));
+  border-top: 1px solid var(--line);
+  backdrop-filter: blur(2px);
+}
+#adminFooterBar .btn{
+  padding: 8px 12px; border: 1px solid var(--line);
+  background: rgba(var(--g-rgb), .06);
+  border-radius: 8px; cursor: pointer;
+}
+#adminFooterBar .btn:hover{ background: rgba(var(--g-rgb), .12); }
+#adminFooterBar .btn.primary{ box-shadow: 0 0 0 1px rgba(var(--g-rgb), .25) inset; }
+</style>
+
 </head>
 
 <body>
@@ -729,7 +759,7 @@
                     <div class="h">STATUT</div>
                     <div>ALIM : <span id="statPower">STANDBY</span></div>
                     <div>PORTE : <span id="statDoor">SCELLÉE</span></div>
-                    <div class="tiny">* V3.3 — FR + CRT</div>
+                    <div class="tiny">* V5 — FR + CRT</div>
                 </div>
                 <div class="divider"></div>
                 <div>
@@ -740,10 +770,9 @@
         </div>
     </div>
 
-    <!-- PANNEAU MJ -->
     <div class="overlay refresh" id="adminPanel">
         <div class="card" style="max-width:980px;width:100%">
-            <div class="h">Panneau MJ — V3.3</div>
+            <div class="h">Panneau MJ — V5</div>
             <div class="tiny">Fermer = retour mode joueur.</div>
             <div class="divider"></div>
 
@@ -754,7 +783,13 @@
                         <select id="setTheme">
                             <option value="green">Vert (RobCo)</option>
                             <option value="amber">Ambre</option>
+                            <option value="blue">Bleu (Pip-Boy)</option>
                         </select>
+
+    <!-- language selector hidden -->
+      <!-- translate button removed -->
+
+    
                     </label>
                     <label>🔐 Mot de passe au démarrage ?
                         <select id="setGateOn">
@@ -846,7 +881,6 @@ CAPTEUR
 
             <div class="divider"></div>
 
-            <!-- WYSIWYG intégré -->
             <div class="h">Éditeur</div>
             <div id="wizRoot" class="mj-editor"></div>
 
@@ -864,7 +898,7 @@ CAPTEUR
     <audio id="sndFail" preload="auto" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
 
     <script>
-        /* MJEditor — aucune dépendance (version compat ES5+) */
+
         (function(global) {
             const DEF = Object.freeze({
                 banner: ['███ ROBCO INDUSTRIES (TM) ███', 'TERMLINK PROTOCOL v2.3', 'PROPERTY OF DUSTOWN BANKING CORP.'],
@@ -955,7 +989,6 @@ CAPTEUR
                 }, label);
             }
 
-            /* ==== Menus avec pages multiples + auto-création ==== */
             function buildMenusUI(root, data, notify) {
                 data.pages = data.pages || {};
                 const wrap = el('div', {
@@ -1004,7 +1037,6 @@ CAPTEUR
                         }, a));
                     });
 
-                    // Zone pages liées (IDs multiples)
                     const pagesWrap = el('div', {
                         class: 'mj-field',
                         style: item.action === 'page' ? '' : 'display:none'
@@ -1024,33 +1056,27 @@ addPageBtn.style.display = (sel.value === 'page') ? '' : 'none';
                         current.push(id);
                         pagesInput.value = current.join(', ');
                         saveRow();
-                        // on vient de créer/ajouter une page : afficher label+input et notifier l’éditeur
+
 lblPages.style.display = '';
 pagesInput.style.display = '';
 try { document.dispatchEvent(new CustomEvent('mj-pages-updated')); } catch(e) {}
                     });
 
-                    // init valeur (compat pageId/pages)
                     let pagesArr = Array.isArray(item.pages) ? item.pages.slice() : (item.pageId ? [item.pageId] : []);
                 pagesInput.value = pagesArr.join(', ');
 
-// créer le label AVANT de s'en servir
 const lblPages = el('label', {}, 'Pages liées');
 pagesWrap.appendChild(lblPages);
 pagesWrap.appendChild(pagesInput);
 
-// affichage initial
 const hasIds = pagesInput.value.trim().length > 0;
 pagesWrap.style.display   = (sel.value === 'page') ? '' : 'none';
 lblPages.style.display    = (sel.value === 'page' && hasIds) ? '' : 'none';
 pagesInput.style.display  = (sel.value === 'page' && hasIds) ? '' : 'none';
 
-// le bouton existe déjà à ce stade (voir étape 1-B)
 addPageBtn.style.display  = (sel.value === 'page') ? '' : 'none';
 
-// enfin on ajoute le bouton dans la rangée
 pagesWrap.appendChild(addPageBtn);
-
 
                     sel.addEventListener('change', function() {
   const isPage = (sel.value === 'page');
@@ -1086,7 +1112,7 @@ pagesWrap.appendChild(addPageBtn);
                             const ids = pagesInput.value.split(',').map(function(s) {
                                 return s.trim();
                             }).filter(Boolean);
-                            // si aucun ID, créer automatiquement une page
+
                             if (ids.length === 0) {
                                 const id = newPageId();
                                 ensurePage(id, base.label);
@@ -1138,7 +1164,7 @@ pagesWrap.appendChild(addPageBtn);
                 }
 
                 const add = iconBtn('+ Ajouter un menu', 'Ajouter', function() {
-                    // Nouveau menu "page" + page auto-liée
+
                     const id = newPageId();
                     ensurePage(id, 'NOUVELLE PAGE');
                     data.menus.push({
@@ -1262,11 +1288,10 @@ pagesWrap.appendChild(addPageBtn);
                 });
 
                 renderList(Object.keys(data.pages || {})[0] || '');
-                // si des pages sont ajoutées ailleurs (menus), recharger la liste sans perdre la sélection
+
 document.addEventListener('mj-pages-updated', function(){
   renderList(sel.value);
 });
-
 
                 wrap.appendChild(bar);
                 wrap.appendChild(el('div', {
@@ -1513,7 +1538,6 @@ document.addEventListener('mj-pages-updated', function(){
                 }
             };
 
-            // Expose de façon robuste
             try {
                 global.MJEditor = MJ_API;
             } catch (e) {}
@@ -1525,8 +1549,6 @@ document.addEventListener('mj-pages-updated', function(){
             } catch (e) {}
         })(typeof window !== 'undefined' ? window : this);
     </script>
-
-    <!-- ===== /MJEditor ===== -->
 
     <script>
         (function() {
@@ -1582,10 +1604,11 @@ document.addEventListener('mj-pages-updated', function(){
             };
 
             const defSet = {
+  lang: 'fr',
                 gateOn: true,
                 // ↓ nouveaux réglages
                 gamePwd: 'ABRI48', // mot de passe du JEU (auth écran)
-                adminPwd: 'ABRI48', // mot de passe du panneau MJ
+                adminPwd: '', // mot de passe du panneau MJ
                 // ↑
                 sfx: true,
                 bootAlways: false,
@@ -1661,6 +1684,7 @@ document.addEventListener('mj-pages-updated', function(){
                 statDoor: $('#statDoor'),
                 statPower: $('#statPower'),
                 helpBox: $('#helpBox')
+
             };
 
             /* ---- Safe load with schema guard ---- */
@@ -1780,9 +1804,10 @@ document.addEventListener('mj-pages-updated', function(){
                 step();
             }
 
-            function applyTheme() {
-                document.documentElement.setAttribute('data-theme', set.theme === 'amber' ? 'amber' : 'green');
-            }
+            function applyTheme(){
+  const theme = (set.theme === 'amber' || set.theme === 'blue') ? set.theme : 'green';
+  document.documentElement.setAttribute('data-theme', theme);
+}
 
             function renderHeader() {
                 el.banner.textContent = (data.banner || []).join('\n');
@@ -2552,38 +2577,38 @@ document.addEventListener('mj-pages-updated', function(){
                 });
             }
 
-
             /* ---- Panneau MJ (avec prompt) + WYSIWYG ---- */
             let editorInstance = null;
 
             function openAdmin(){
-  const v = prompt('Mot de passe MJ :');
-  if (v === null) return;
-
-  if (v === String(set.adminPwd || '')){
-    // 1) Préparer le DOM du panneau (mais ne pas l'afficher)
-    el.adminPanel.classList.remove('active'); // s'assurer qu'il est caché
-    renderAdmin();                            // construit le contenu
-
-    // 2) Initialiser les onglets (masque tout sauf "Hack")
-    try{
-      if (typeof setupTabs4 === 'function') {
-        setupTabs4('hack');                   // force Hack tout de suite
-      } else if (typeof setupAdminTabs === 'function') {
-        // (au cas où une ancienne fonction traîne)
-        setupAdminTabs('hack');
-      } else {
-        console.warn('Aucune fonction d’onglets trouvée');
+  try{
+    // Si aucun mot de passe MJ n'est défini, on ouvre directement
+    if(!String(set.adminPwd || '').length){
+      renderAdmin();
+      const panel = el?.adminPanel || document.getElementById('adminPanel');
+      if(panel){
+        panel.classList.remove('active');
+        try{ if(typeof setupTabs4==='function'){ setupTabs4('hack'); } }catch(_){}
+        panel.classList.add('active');
       }
-    }catch(err){
-      console.error('Erreur setup onglets:', err);
-      // on laisse quand même s’ouvrir pour diagnostiquer visuellement
+      return;
     }
-
-    // 3) Maintenant seulement, afficher le panneau (déjà filtré)
-    el.adminPanel.classList.add('active');
-  } else {
-    alert('Mot de passe incorrect.');
+    // Sinon on demande le mot de passe
+    const v = prompt((typeof t==='function')?t('admin.passwordPrompt'):'Mot de passe MJ :');
+    if (v === null) return;
+    if (v === String(set.adminPwd || '')){
+      renderAdmin();
+      const panel = el?.adminPanel || document.getElementById('adminPanel');
+      if(panel){
+        panel.classList.remove('active');
+        try{ if(typeof setupTabs4==='function'){ setupTabs4('hack'); } }catch(_){}
+        panel.classList.add('active');
+      }
+    } else {
+      alert((typeof t==='function')?t('admin.badPassword'):'Mot de passe incorrect.');
+    }
+  }catch(e){
+    try{ console.error('openAdmin error:', e); }catch(_){}
   }
 }
             function setupTabs4(defaultTab) {
@@ -2680,7 +2705,6 @@ document.addEventListener('mj-pages-updated', function(){
                             .find(h => /éditeur/i.test(h.textContent || ''));
                         if (hEd) hEd.hidden = true;
                     }
-
 
                     if (tab === 'hack') showSettingsSubtab('hack');
                     else if (tab === 'effects') showSettingsSubtab('effects');
@@ -2876,7 +2900,6 @@ document.addEventListener('mj-pages-updated', function(){
                 alert('Réglages enregistrés.');
             });
 
-
             document.getElementById('lockNow').addEventListener('click', () => {
                 state.lockout = false;
                 state.wrong = 0;
@@ -2903,7 +2926,7 @@ document.addEventListener('mj-pages-updated', function(){
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = 'terminal_v3_3_allinone.json';
+                a.download = 'terminal_v5_allinone.json';
                 document.body.appendChild(a);
                 a.click();
                 a.remove();
@@ -2935,7 +2958,434 @@ document.addEventListener('mj-pages-updated', function(){
             renderHeader();
             boot();
         })();
-    </script>
+        const FT_VERSION = 'V5.0.0';
+try { console.info('[Terminal Fallout] %s prêt.', FT_VERSION); } catch {}
+
+// Masquer le bouton MJ si l'URL n'a pas ?mj=1 (lien public)
+(function(){
+  try{
+    const isMJ = new URLSearchParams(location.search).get('mj') === '1';
+    var btn = document.getElementById('adminToggle') || (typeof el!=='undefined' && el.adminToggle);
+    if(btn && btn.style){ btn.style.display = ''; }
+  }catch(_){}
+})();
+
+</script>
+
+<script>
+// I18N minimal FR/EN
+var I18N = {
+  fr: {
+    "panel.title": "Panneau MJ — V5.1",
+    "effects.language": "Langue",
+    "admin.passwordPrompt": "Mot de passe MJ :",
+    "admin.badPassword": "Mot de passe incorrect."
+  },
+  en: {
+    "panel.title": "GM Panel — V5.1",
+    "effects.language": "Language",
+    "admin.passwordPrompt": "GM password:",
+    "admin.badPassword": "Wrong password."
+  }
+};
+function t(key){
+  try{
+    var L = (typeof set!=='undefined' && set.lang) ? set.lang : 'fr';
+    return (I18N[L] && I18N[L][key]) || (I18N.fr[key] || key);
+  }catch(_){ return key; }
+}
+function applyLanguage(){
+  try{
+    document.querySelectorAll('[data-i18n]').forEach(function(el){
+      var k = el.getAttribute('data-i18n');
+      if(k) el.textContent = t(k);
+    });
+  }catch(_){}
+}
+// Bind after admin renders, so #setLang exists
+(function(){
+  try{
+    var _ra = window.renderAdmin;
+    if(typeof _ra === 'function'){
+      window.renderAdmin = function(){
+        var r = _ra.apply(this, arguments);
+        try{
+          var sel = document.getElementById('setLang');
+          if(sel){
+            sel.value = (typeof set!=='undefined' && set.lang) ? set.lang : 'fr';
+            sel.onchange = function(){
+              try{
+                if(typeof set!=='undefined'){ set.lang = sel.value; }
+                try{ localStorage.setItem('ft_settings_inline_v10', JSON.stringify(set)); }catch(_){}
+                applyLanguage();
+                try{ if(typeof renderHeader==='function'){ renderHeader(); } }catch(_){}
+              }catch(_){}
+            };
+          }
+          applyLanguage();
+        }catch(_){}
+        return r;
+      };
+    }
+    // Also apply on DOM ready
+    if(document.readyState !== 'loading'){ applyLanguage(); }
+    else document.addEventListener('DOMContentLoaded', applyLanguage);
+  }
+  catch(_){ }
+})();
+</script>
+
+<script>
+// === Content translations for default dataset ===
+var DATA_I18N = {
+  fr: {
+    title: "ROBCO INDUSTRIES™ TERMLINK",
+    subtitle: "BANQUE DE DUSTOWN — TERMINAL SÉCURITÉ #48",
+    banner: ["███ ROBCO INDUSTRIES (TM) ███","TERMLINK PROTOCOL v2.3","PROPERTY OF DUSTOWN BANKING CORP."],
+    help: ["• Cliquez un menu pour naviguer.","• En cas d’échecs répétés : hack.","• MJ → Import/Export pour sauvegarder."],
+    statPower: "STANDBY",
+    statDoor: "SCELLÉE",
+    menusByAction: {
+      logs: "➤ CONSULTER LES JOURNAUX",
+      memos: "➤ MÉMOS DE LA DIRECTION",
+      door:  "➤ CONTRÔLE PORTE ABRI 48",
+      about: "➤ À PROPOS / SYSTÈME"
+    },
+    logs: [
+      "- 2077-10-20 : Équipe de nuit : 3 échecs de badge aux guichets. Ticket maintenance ouvert.",
+      "- 2077-10-22 : Livraison : 12 caisses de billets pré-guerre vers Archive B. Signature : C. Holden.",
+      "- 2077-10-23 : Exercice d’évac annulé. Route d’abri mise à jour vers SOUS-NIVEAU 48."
+    ],
+    memos: [
+      "- Note au personnel : Ne rien stocker près du monte-charge de l’abri. Dalles dégagées.",
+      "- Plainte client : Multiples faux billets — vérifier la trieuse lundi."
+    ]
+  },
+  en: {
+    title: "ROBCO INDUSTRIES™ TERMLINK",
+    subtitle: "DUSTOWN BANK — SECURITY TERMINAL #48",
+    banner: ["███ ROBCO INDUSTRIES (TM) ███","TERMLINK PROTOCOL v2.3","PROPERTY OF DUSTOWN BANKING CORP."],
+    help: ["• Click a menu to navigate.","• After repeated failures: hack.","• GM → Import/Export to save."],
+    statPower: "STANDBY",
+    statDoor: "SEALED",
+    menusByAction: {
+      logs: "➤ VIEW LOGS",
+      memos: "➤ MANAGEMENT MEMOS",
+      door:  "➤ VAULT 48 DOOR CONTROL",
+      about: "➤ ABOUT / SYSTEM"
+    },
+    logs: [
+      "- 2077-10-20: Night shift: 3 badge failures at tellers. Maintenance ticket opened.",
+      "- 2077-10-22: Delivery: 12 crates of pre-war bills to Archive B. Signed: C. Holden.",
+      "- 2077-10-23: Evac drill canceled. Vault route updated to SUB-LEVEL 48."
+    ],
+    memos: [
+      "- Staff note: Do not store anything near the vault lift. Keep tiles clear.",
+      "- Customer complaint: Multiple counterfeit bills — check the sorter on Monday."
+    ]
+  }
+};
+
+function translateAllContent(lang){
+  try{
+    // 1) UI strings via data-i18n
+    applyLanguage();
+    // 2) Data object (only for known default fields). We do not touch custom pages.
+    var pack = DATA_I18N[lang] || DATA_I18N.fr;
+    // Top-level texts
+    if (pack.title)    data.title = pack.title;
+    if (pack.subtitle) data.subtitle = pack.subtitle;
+    if (pack.banner)   data.banner  = pack.banner.slice();
+    if (pack.help)     data.help    = pack.help.slice();
+    if (pack.statPower) data.statPower = pack.statPower;
+    if (pack.statDoor)  data.statDoor  = pack.statDoor;
+
+    // Menus: relabel known actions; keep "page" labels as-is
+    if (Array.isArray(data.menus)){
+      data.menus = data.menus.map(function(m){
+        var out = Object.assign({}, m);
+        if (out && out.action && pack.menusByAction && pack.menusByAction[out.action]){
+          out.label = pack.menusByAction[out.action];
+        }
+        return out;
+      });
+    }
+
+    // Logs & memos: overwrite only if currently equal to the opposite language defaults or to the starting defaults
+    function arrEq(a,b){
+      if(!Array.isArray(a)||!Array.isArray(b)||a.length!==b.length) return false;
+      for(var i=0;i<a.length;i++) if(String(a[i])!==String(b[i])) return false;
+      return true;
+    }
+    var other = (lang==='en')?DATA_I18N.fr:DATA_I18N.en;
+    if (arrEq(data.logs, other.logs) || arrEq(data.logs, DATA_I18N.fr.logs) || arrEq(data.logs, DATA_I18N.en.logs)){
+      data.logs = pack.logs.slice();
+    }
+    if (arrEq(data.memos, other.memos) || arrEq(data.memos, DATA_I18N.fr.memos) || arrEq(data.memos, DATA_I18N.en.memos)){
+      data.memos = pack.memos.slice();
+    }
+
+    // Save + re-render
+    try{ localStorage.setItem('ft_data_inline_v10', JSON.stringify(data)); }catch(_){}
+    try{ localStorage.setItem('ft_settings_inline_v10', JSON.stringify(set)); }catch(_){}
+    if (typeof renderHeader==='function') renderHeader();
+  }catch(e){
+    try{ console.error('translateAllContent error:', e); }catch(_){}
+  }
+}
+</script>
+<script>
+(function(){
+  function ensureAdminLangButtons(){
+    try{
+      var adminTab = document.getElementById('tab-admin') || document.querySelector('.mj-tabpage#tab-admin') || document.querySelector('#adminPanel .mj-tabpage:nth-child(3)');
+      if(!adminTab) return false;
+      if(document.getElementById('langAdminBlock')) return true;
+      var wrap = document.createElement('div');
+      wrap.id = 'langAdminBlock';
+      wrap.innerHTML = '<div class="row"><span class="title">Langue</span><button class="btn" id="btnLangFR">Français</button><button class="btn" id="btnLangEN">English</button></div>';
+      adminTab.appendChild(wrap);
+      var btnFR = document.getElementById('btnLangFR');
+      var btnEN = document.getElementById('btnLangEN');
+      if(btnFR) btnFR.onclick = function(){
+        try{ if(typeof set!=='undefined'){ set.lang='fr'; } localStorage.setItem('ft_settings_inline_v10', JSON.stringify(set)); translateAllContent('fr'); }catch(_){}
+      };
+      if(btnEN) btnEN.onclick = function(){
+        try{ if(typeof set!=='undefined'){ set.lang='en'; } localStorage.setItem('ft_settings_inline_v10', JSON.stringify(set)); translateAllContent('en'); }catch(_){}
+      };
+      return true;
+    }catch(_){ return false; }
+  }
+  // Re-run after each render of admin
+  var _ra = window.renderAdmin;
+  if(typeof _ra === 'function'){
+    window.renderAdmin = function(){
+      var r = _ra.apply(this, arguments);
+      try{ ensureAdminLangButtons(); }catch(_){}
+      return r;
+    };
+  }else{
+    // Fallback: try on DOM ready
+    if(document.readyState!=='loading'){ ensureAdminLangButtons(); }
+    else document.addEventListener('DOMContentLoaded', ensureAdminLangButtons);
+  }
+  // Ensure MJ button opens the panel
+  function bindMJ(){
+    try{
+      var t=document.getElementById('adminToggle');
+      if(t){ t.onclick=function(ev){ try{ev&&ev.preventDefault();}catch(_){ } if(typeof openAdmin==='function') openAdmin(); }; }
+    }catch(_){}
+  }
+  if(document.readyState!=='loading'){ bindMJ(); }
+  else document.addEventListener('DOMContentLoaded', bindMJ);
+}();
+</script>
+
+
+
+<script>
+(function(){
+  function ensureAdminLangDropdown(){
+    try{
+      var panel = document.getElementById('adminPanel');
+      if(!panel) return false;
+      var two = panel.querySelector('.two');
+      var colRight = two ? two.lastElementChild : null;
+      var hIO = Array.from(panel.querySelectorAll('.h')).find(function(h){
+        return /import\s*\/\s*export/i.test(h.textContent||'');
+      });
+      var target = colRight || (hIO && hIO.parentElement) || panel;
+      if(!target) return false;
+      if(document.getElementById('langAdminBlock')) return true;
+      var wrap = document.createElement('div');
+      wrap.id = 'langAdminBlock';
+      wrap.innerHTML = '<div class="row"><label for="adminLangSelect">Langue</label><select id="adminLangSelect"><option value="fr">Français</option><option value="en">English</option></select></div>';
+      target.appendChild(wrap);
+      var sel = document.getElementById('adminLangSelect');
+      if(sel){
+        // init current value
+        try{ sel.value = (typeof set!=='undefined' && set.lang) ? set.lang : 'fr'; }catch(_){ sel.value='fr'; }
+        sel.onchange = function(){
+          try{
+            if(typeof set!=='undefined'){ set.lang = sel.value; }
+            try{ localStorage.setItem('ft_settings_inline_v10', JSON.stringify(set)); }catch(_){}
+            if(typeof translateAllContent==='function') translateAllContent(sel.value);
+            if(typeof applyLanguage==='function') applyLanguage();
+            if(typeof renderHeader==='function') renderHeader();
+          }catch(_){}
+        };
+      }
+      return true;
+    }catch(_){ return false; }
+  }
+  // Hook after each render of admin
+  try{
+    var _ra = window.renderAdmin;
+    if(typeof _ra === 'function'){
+      window.renderAdmin = function(){
+        var r = _ra.apply(this, arguments);
+        try{ ensureAdminLangDropdown(); }catch(_){}
+        try{ relocateSaveButton(); }catch(_){ }
+        try{ relocateSaveButton(); relocateCloseButton(); }catch(_){ }
+        return r;
+      };
+    }else{
+      if(document.readyState!=='loading'){ ensureAdminLangDropdown(); }
+      else document.addEventListener('DOMContentLoaded', ensureAdminLangDropdown);
+    }
+  }catch(_){}
+  // Ensure MJ button opens the panel
+  function bindMJ(){
+    try{
+      var t=document.getElementById('adminToggle');
+      if(t){ t.onclick=function(ev){ try{ev&&ev.preventDefault();}catch(_){ } if(typeof openAdmin==='function') openAdmin(); }; }
+    }catch(_){}
+  }
+  if(document.readyState!=='loading'){ bindMJ(); }
+  else document.addEventListener('DOMContentLoaded', bindMJ);
+})();
+</script>
+
+
+<script>
+(function(){
+  function findExistingCloseBtn(){
+    try{
+      var p=document.getElementById('adminPanel'); if(!p) return null;
+      // look for any button that likely closes the panel
+      var cand=[].slice.call(p.querySelectorAll('button, .btn')).filter(function(b){
+        var txt=(b.textContent||'').trim().toLowerCase();
+        var k=b.getAttribute && b.getAttribute('data-i18n');
+        return (k==='btn.close') || /fermer/.test(txt) || /close/.test(txt);
+      });
+      return cand[0]||null;
+    }catch(_){ return null; }
+  }
+  function clickVisibleSaveButtons(){
+    try{
+      var p=document.getElementById('adminPanel'); if(!p) return;
+      var activePage = p.querySelector('.mj-tabpage.active') || p;
+      // Prefer i18n save buttons inside active tab
+      var btns=[].slice.call(activePage.querySelectorAll('button, .btn')).filter(function(b){
+        if(b.closest('#adminFooterBar')) return false;
+        var k=b.getAttribute && b.getAttribute('data-i18n');
+        var txt=(b.textContent||'').trim().toLowerCase();
+        return (k==='btn.save') || txt==='enregistrer' || txt==='save';
+      });
+      if(btns.length){ btns[0].click(); return true; }
+      // Fallback: global handlers
+      var ok=false;
+      try{ if(typeof saveSettings==='function'){ saveSettings(); ok=true; } }catch(_){}
+      try{ if(window.MJEditor && typeof MJEditor.save==='function'){ MJEditor.save(); ok=true; } }catch(_){}
+      return ok;
+    }catch(_){ return false; }
+  }
+  function ensureAdminFooter(){
+    try{
+      var p=document.getElementById('adminPanel'); if(!p) return false;
+      if(document.getElementById('adminFooterBar')) return true;
+      var bar=document.createElement('div');
+      bar.id='adminFooterBar';
+      bar.innerHTML='<div id="adminSaveSlot" style="margin-right:8px"></div><div id="adminCloseSlot"></div>';
+      p.appendChild(bar);
+      // Bind buttons
+      var save=document.getElementById('adminSaveAll');
+      var close=document.getElementById('adminCloseAll');
+      if(save){ save.onclick=function(){ try{ clickVisibleSaveButtons(); }catch(_){ } }; }
+      if(close){
+        close.onclick=function(){
+          try{
+            var b=findExistingCloseBtn();
+            if(b){ b.click(); }
+            else{
+              var panel=document.getElementById('adminPanel');
+              if(panel && panel.classList) panel.classList.remove('active');
+            }
+          }catch(_){}
+        };
+      }
+      // i18n apply for our buttons if available
+      try{ if(typeof applyLanguage==='function') applyLanguage(); }catch(_){}
+      return true;
+    }catch(_){ return false; }
+  }
+
+      function relocateCloseButton(){
+        try{
+          var p=document.getElementById('adminPanel'); if(!p) return false;
+          var slot=document.getElementById('adminCloseSlot'); if(!slot) return false;
+          // Cleanup previous
+          while(slot.firstChild) slot.removeChild(slot.firstChild);
+          // Find the existing close button
+          var closeReal=document.getElementById('closeAdmin');
+          if(!closeReal) return false;
+          // Hide the original container row (the block with "Échap = fermer")
+          try{
+            var row=closeReal.closest('div');
+            // The row is inside a wrapper with a <span class="tiny">Échap = fermer</span> above
+            var wrapper = row && row.parentElement;
+            if(wrapper){
+              wrapper.style.display='none';
+            }
+          }catch(_){}
+          // Move the real button
+          slot.appendChild(closeReal);
+          // Ensure visual consistency
+          closeReal.classList.add('btn');
+          closeReal.style.margin='0';
+          return true;
+        }catch(_){ return false; }
+      }
+
+      function relocateSaveButton(){
+        try{
+          var p=document.getElementById('adminPanel'); if(!p) return false;
+          var slot=document.getElementById('adminSaveSlot'); if(!slot) return false;
+          // Cleanup any previous moved save button in slot
+          while(slot.firstChild) slot.removeChild(slot.firstChild);
+          // Find active tab page
+          var active=p.querySelector('.mj-tabpage.active')||p;
+          // Look for a button with text "Enregistrer réglages" (FR) or "Save settings" (EN)
+          var candidates=[].slice.call(active.querySelectorAll('button,.btn')).filter(function(b){
+            var txt=(b.textContent||'').trim().toLowerCase();
+            if(b.closest('#adminFooterBar')) return false;
+            return txt.includes('enregistrer réglages') || txt==='/ enregistrer réglages' || txt.includes('save settings');
+          });
+          // Fallbacks: any button with data-i18n="btn.save" inside the active page
+          if(!candidates.length){
+            candidates=[].slice.call(active.querySelectorAll('[data-i18n=\"btn.save\"]'));
+          }
+          if(!candidates.length) return false;
+          var saveBtn=candidates[0];
+          // Move the button into the slot (keeps events)
+          slot.appendChild(saveBtn);
+          // make it primary-ish
+          saveBtn.classList.add('btn','primary');
+          saveBtn.style.minWidth='auto';
+          saveBtn.style.margin='0';
+          return true;
+        }catch(_){ return false; }
+      }
+
+  // Hook renderAdmin to (re)append/footer
+  try{
+    var _ra=window.renderAdmin;
+    if(typeof _ra==='function'){
+      window.renderAdmin=function(){
+        var r=_ra.apply(this, arguments);
+        try{ ensureAdminFooter(); }catch(_){}
+        try{ relocateSaveButton(); }catch(_){ }
+        try{ relocateSaveButton(); relocateCloseButton(); }catch(_){ }
+        return r;
+      };
+    }else{
+      if(document.readyState!=='loading'){ ensureAdminFooter(); }
+      else document.addEventListener('DOMContentLoaded', function(){ ensureAdminFooter(); relocateSaveButton(); relocateCloseButton(); });
+    }
+  }catch(_){}
+})();
+</script>
+
 </body>
 
 </html>
