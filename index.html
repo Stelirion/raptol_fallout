@@ -1,768 +1,254 @@
 <!doctype html>
 <html lang="fr">
-
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Terminal Fallout — V5.3 (FR • CRT)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <title>Terminal Fallout — V7 </title>
     <style>
-
+        /* --- VARIABLES V5.3 --- */
         :root {
-
-            --g: #7CFF91;
-            --g-rgb: 124, 255, 145;
-            --y: #FFD75E;
-            --line: rgba(var(--g-rgb), .18);
-
+            --g: #7CFF91; --g-rgb: 124, 255, 145;
+            --y: #FFD75E; --line: rgba(var(--g-rgb), .18);
+            --err: #ff4444; /* Couleur erreur */
         }
+        html[data-theme="amber"] { --g: #FFC107; --g-rgb: 255, 193, 7; --y: #FFE08A; --line: rgba(var(--g-rgb), .16); }
+        html[data-theme="blue"] { --g: #39c0ff; --g-rgb: 57, 192, 255; --line: rgba(var(--g-rgb), .18); }
 
-        :root[data-theme="amber"] {
-            --g: #FFC107;
-            --g-rgb: 255, 193, 7;
-            --y: #FFE08A;
-            --line: rgba(var(--g-rgb), .16);
-        }
+        /* TAILLE STANDARD (16px) */
+        html, body { height: 100%; margin: 0; background: #0b0b0b; color: var(--g); font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace; overflow: hidden; user-select: none; font-size: 16px; }
+        * { scrollbar-width: none; box-sizing: border-box; }
+        ::-webkit-scrollbar { display: none; }
 
-:root[data-theme="blue"]{
-  --g: #39c0ff;        
-  --g-rgb: 57,192,255;
-}
-
-        html,
-        body {
-            height: 100%;
-            margin: 0
-        }
-
-        body {
-            background: #0b0b0b;
-            color: var(--g);
-            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace
-        }
-
+        /* --- CRT CONTAINER --- */
         .crt {
-            position: relative;
-            min-height: 100vh;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 16px;
-            background: #000;
+            position: relative; height: 100dvh; width: 100vw; margin: 0 auto; padding: 20px;
+            background: #000; display: flex; flex-direction: column;
             border: 1px solid var(--line);
-            border-radius: 10px;
-            box-sizing: border-box;
-              overflow: hidden;
-  background-clip: padding-box;
-
+            box-sizing: border-box; overflow: hidden;
         }
+        body.editing .crt { border: 2px dashed #ff4444; }
 
-        .crt::before {
-            content: "";
-            position: absolute;
-            inset: 0;
-            pointer-events: none;
-            z-index: 1;
-              background: radial-gradient(
-    ellipse at center,
-    rgba(var(--g-rgb), .14) 0%,
-    rgba(var(--g-rgb), .08) 35%,
-    rgba(0,0,0,0)          70%
-  ); }
-
-        .crt,
-        .crt * {
-            text-shadow:
-                0 0 4px rgba(var(--g-rgb), .78),
-                0 0 10px rgba(var(--g-rgb), .48);
+        /* Scanlines & Glow */
+        body.glitch-active .crt::before {
+            content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 10;
+            background: radial-gradient(ellipse at center, rgba(var(--g-rgb), .14) 0%, rgba(var(--g-rgb), .08) 35%, rgba(0,0,0,0) 70%);
         }
-
-        .crt::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    z-index: 2;
-    background: repeating-linear-gradient(
-      to bottom,
-      rgba(255,255,255,.06) 0 1px,
-      rgba(0,0,0,0)         1px 3px
-    );
-    mix-blend-mode: soft-light;
-    opacity: .22;
-    border-radius: inherit;
-}
-
-        @keyframes flicker {
-
-            0%,
-            19%,
-            21%,
-            23%,
-            25%,
-            54%,
-            56%,
-            100% {
-                opacity: 1
-            }
-
-            20%,
-            24%,
-            55% {
-                opacity: .92
-            }
-
-            22% {
-                opacity: .96
-            }
+        body.glitch-active .crt::after {
+            content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 11;
+            background: repeating-linear-gradient(to bottom, rgba(255,255,255,.06) 0 1px, rgba(0,0,0,0) 1px 3px);
+            mix-blend-mode: soft-light; opacity: .22;
         }
+        body.glitch-active .crt * { text-shadow: 0 0 4px rgba(var(--g-rgb), .78), 0 0 10px rgba(var(--g-rgb), .48); }
+        @keyframes flicker { 0% { opacity: 0.98; } 50% { opacity: 1; } 100% { opacity: 0.98; } }
+        body.glitch-active .crt { animation: flicker 2.2s infinite; }
 
-        .crt {
-            animation: flicker 2.2s infinite
-        }
+        /* --- UI LAYER --- */
+        .ui-layer { position: relative; z-index: 10; display: flex; flex-direction: column; height: 100%; opacity: 0; transition: opacity 0.5s ease; }
+        .ui-visible { opacity: 1; }
 
-        .top {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            position: relative;
-            z-index: 3
-        }
-
-        .banner {
-            white-space: pre;
-            opacity: .9;
-            user-select: none
-        }
-
-        .icon,
-        .btn {
-            background: transparent;
-            color: var(--g);
-            border: 1px solid var(--line);
-            padding: 6px 10px;
-            border-radius: 6px;
-            cursor: pointer
-        }
-
-        .icon:hover,
-        .btn:hover {
-            background: rgba(var(--g-rgb), .08)
-        }
-
-        .divider {
-            height: 2px;
-            background: linear-gradient(90deg, transparent, var(--line), transparent);
-            margin: 10px 0
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 16px
-        }
-
-        .card {
-            border: 1px solid var(--line);
-            border-radius: 8px;
-            padding: 12px;
-            background: rgba(0, 0, 0, .35)
-        }
-
-        .scroll {
-            overflow: auto
-        }
-
-        .h {
-            font-weight: 700;
-            margin: .25rem 0 .5rem
-        }
-
-        .tiny {
-            font-size: .8rem;
-            opacity: .65
-        }
-
-        #console {
-            white-space: pre-wrap;
-            line-height: 1.25;
-            min-height: 420px
-        }
-
-        .prompt {
-            display: inline
-        }
-
-        .caret {
-            display: inline-block;
-            width: 8px;
-            height: 1em;
-            vertical-align: -0.2em;
-            background: var(--g);
-            margin-left: 2px;
-            animation: blink .9s steps(2) infinite
-        }
-
-        @keyframes blink {
-
-            0%,
-            100% {
-                opacity: 1
-            }
-
-            50% {
-                opacity: .2
-            }
-        }
-
-        .mlink {
-            display: inline-block;
-            padding: 0 2px;
-            border-radius: 3px;
-            cursor: pointer
-        }
-
-       .mlink:hover { background: rgba(var(--g-rgb), .12) }
+        /* --- BOOT SCREEN --- */
+        #bootLayer { position: absolute; inset: 0; z-index: 100; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 1s ease; }
+        .robco-logo { width: 180px; margin-bottom: 30px; filter: sepia(100%) hue-rotate(50deg) saturate(500%) brightness(0.9) drop-shadow(0 0 5px var(--g)); animation: pulse 3s infinite; }
+        @keyframes pulse { 50% { opacity: 0.7; transform: scale(1.02); } }
         
-
-        .hackwall {
-            font-size: 14px;
-            line-height: 1.2;
-            white-space: pre;
-            user-select: none;
-            margin-top: 8px
-        }
-
-        .hackwall .c {
-            pointer-events: none
-        }
-
-        .hackwall .w {
-            display: inline;
-            padding: 0 1px;
-            border-radius: 2px;
-            cursor: pointer;
-            background: transparent;
-            color: var(--y);
-            border: none;
-            outline: 1px dashed transparent;
-            transition: background .15s ease
-        }
-
-        .hackwall .w:hover {
-            background: rgba(var(--g-rgb), .14);
-            outline-color: var(--y)
-        }
-
-        .triesBar {
-            height: 6px;
-            background: rgba(var(--g-rgb), .15);
-            border: 1px solid var(--line);
-            border-radius: 4px;
-            overflow: hidden;
-            margin-top: 6px
-        }
-
-        .triesFill {
-            height: 100%;
-            width: 100%;
-            background: var(--y)
-        }
-
-        textarea,
-        input,
-        select {
-            background: #000;
-            color: var(--g);
-            border: 1px solid var(--line);
-            border-radius: 6px
-        }
-
-        textarea {
-            width: 100%;
-            min-height: 160px;
-            padding: 10px
-        }
-
-        label {
-            display: block;
-            margin: 6px 0
-        }
-
-        .two {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px
-        }
-
-        .overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, .94);
-            display: none;
-            place-items: center;
-            padding: 20px;
-            z-index: 1000
-        }
-
-        .overlay.active {
-            display: grid
-        }
-
-        .overlay .card {
-            max-height: 90vh;
-            overflow: auto;
-        }
-
-        body.glitch .crt {
-            filter: contrast(1.05) saturate(1.05)
-        }
-
-body.glitch:before { content: none; }
-
-body.glitch .crt::after { opacity: .28; }
-
-        .mj-editor {
-            background: #000;
-            border: 1px solid var(--line);
-            border-radius: 10px;
-            padding: 12px;
-            margin: 12px 0
-        }
-
-        .mj-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px
-        }
-
-        .mj-col {
-            border: 1px solid var(--line);
-            border-radius: 8px;
-            padding: 10px;
-            background: rgba(0, 0, 0, .35)
-        }
-
-        .mj-h {
-            font-weight: 700;
-            margin: 2px 0 8px
-        }
-
-        .mj-tiny {
-            font-size: .82rem;
-            opacity: .7
-        }
-
-        .mj-divider {
-            height: 2px;
-            background: linear-gradient(90deg, transparent, var(--line), transparent);
-            margin: 10px 0
-        }
-
-        .mj-tabs {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 8px;
-            flex-wrap: wrap
-        }
-
-        .mj-btn {
-            background: transparent;
-            color: var(--g);
-            border: 1px solid var(--line);
-            padding: 6px 10px;
-            border-radius: 6px;
-            cursor: pointer
-        }
-
-        .mj-btn:hover {
-            background: rgba(var(--g-rgb), .08)
-        }
-
-        .mj-tabpage {
-            display: none
-        }
-
-        .mj-tabpage.active {
-            display: block
-        }
-
-        .mj-item {
-            display: grid;
-            grid-template-columns: auto 1fr auto auto;
-            gap: 8px;
-            align-items: center;
-            padding: 6px;
-            border: 1px dashed var(--line);
-            border-radius: 8px;
-            background: rgba(0, 0, 0, .25)
-        }
-
-        .mj-list {
-            display: grid;
-            gap: 8px
-        }
-
-        .mj-field {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-            margin: 6px 0
-        }
-
-        .mj-field label {
-            min-width: 120px
-        }
-
-        .mj-editor input[type="text"],
-        .mj-editor input[type="number"],
-        .mj-editor textarea,
-        .mj-editor select {
-            background: #000;
-            color: var(--g);
-            border: 1px solid var(--line);
-            border-radius: 6px;
-            padding: 8px;
-            width: 100%;
-        }
-
-        .mj-editor textarea {
-            min-height: 120px
-        }
-
-        .mj-badge {
-            font-size: .75rem;
-            padding: 2px 6px;
-            border: 1px solid var(--line);
-            border-radius: 6px;
-            background: rgba(var(--g-rgb), .06)
-        }
-
-        .mj-actions {
-            display: flex;
-            gap: 8px;
-            justify-content: flex-end
-        }
-
-        .mj-flex {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-            flex-wrap: wrap
-        }
-
-        .mj-grow {
-            flex: 1
-        }
-
-        .mj-note {
-            padding: 6px 8px;
-            border: 1px dashed var(--line);
-            border-radius: 6px;
-            background: rgba(var(--g-rgb), .06)
-        }
-
-        .mj-muted {
-            color: #9fe7ad;
-            opacity: .8
-        }
-
-        .mj-row-1 {
-            display: block
-        }
-
-        @media (max-width: 960px) {
-            .mj-row {
-                grid-template-columns: 1fr
-            }
-        }
-
-        #adminPanel.refresh {
-            --panel-border: rgba(var(--g-rgb), .14);
-            --panel-bg: rgba(0, 0, 0, .48);
-            --panel-ghost: rgba(var(--g-rgb), .03);
-            backdrop-filter: blur(6px);
-        }
-
-        #adminPanel.refresh .h {
-            display: flex;
-            align-items: center;
-            gap: .6rem;
-            font-weight: 700;
-            letter-spacing: .06em;
-            text-transform: uppercase;
-            padding: 10px 12px;
-            margin: 10px 0 12px;
-            border: 1px solid var(--panel-border);
-            border-radius: 12px;
-            background: linear-gradient(180deg, var(--panel-ghost), transparent);
-        }
-
-        #adminPanel.refresh .box,
-        #adminPanel.refresh .group,
-        #adminPanel.refresh .panel,
-        #adminPanel.refresh .menus {
-            border: 1px solid var(--panel-border);
-            border-radius: 14px;
-            background: var(--panel-bg);
-            padding: 12px;
-            box-shadow: 0 6px 30px rgba(0, 0, 0, .25), inset 0 1px 0 rgba(255, 255, 255, .02);
-        }
-
-        #adminPanel.refresh .two> :first-child label {
-            display: grid;
-            grid-template-columns: 1fr minmax(240px, 320px);
-            gap: 10px;
-            align-items: center;
-            padding: 8px 10px;
-            margin: 6px 0;
-            border: 1px solid var(--panel-border);
-            border-radius: 10px;
-            background: rgba(var(--g-rgb), .02);
-        }
-
-        #adminPanel.refresh #wizRoot label {
-            display: inline;
-            border: 0;
-            background: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        #adminPanel.refresh #wizRoot .mj-item {
-            overflow: visible;
-        }
-
-        #adminPanel.refresh #wizRoot .mj-actions {
-            position: relative;
-            z-index: 2;
-        }
-
-        #adminPanel.refresh input[type="text"],
-        #adminPanel.refresh input[type="password"],
-        #adminPanel.refresh input[type="number"],
-        #adminPanel.refresh select,
-        #adminPanel.refresh textarea {
-            width: 100%;
-            color: var(--g);
-            background: rgba(0, 0, 0, .65);
-            border: 1px solid var(--panel-border);
-            border-radius: 10px;
-            padding: 8px 10px;
-            outline: none;
-            box-shadow: inset 0 0 0 1px rgba(var(--g-rgb), .03);
-        }
-
-        #adminPanel.refresh input:focus,
-        #adminPanel.refresh select:focus,
-        #adminPanel.refresh textarea:focus {
-            box-shadow: 0 0 0 2px rgba(var(--g-rgb), .22), inset 0 0 0 1px rgba(var(--g-rgb), .05);
-        }
-
-        #adminPanel.refresh input[type="checkbox"] {
-            appearance: none;
-            -webkit-appearance: none;
-            position: relative;
-            width: 42px;
-            height: 22px;
-            border-radius: 999px;
-            cursor: pointer;
-            background: rgba(var(--g-rgb), .12);
-            border: 1px solid var(--panel-border);
-            transition: .18s;
-        }
-
-        #adminPanel.refresh input[type="checkbox"]::after {
-            content: "";
-            position: absolute;
-            top: 2px;
-            left: 2px;
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            background: #000;
-            box-shadow: 0 0 0 1px var(--panel-border), inset 0 0 10px rgba(var(--g-rgb), .25);
-            transition: .18s;
-        }
-
-        #adminPanel.refresh input[type="checkbox"]:checked {
-            background: rgba(var(--g-rgb), .28);
-        }
-
-        #adminPanel.refresh input[type="checkbox"]:checked::after {
-            left: 22px;
-        }
-
-        #adminPanel.refresh .btn,
-        #adminPanel.refresh .mj-btn,
-        #adminPanel.refresh button {
-            background: rgba(var(--g-rgb), .08);
-            border: 1px solid var(--panel-border);
-            border-radius: 999px;
-            padding: 8px 12px;
-            color: var(--g);
-            font-weight: 700;
-            letter-spacing: .02em;
-            box-shadow: 0 0 12px rgba(var(--g-rgb), .10);
-            transition: transform .06s ease, box-shadow .15s ease, background .15s ease;
-        }
-
-        #adminPanel.refresh .btn:hover,
-        #adminPanel.refresh .mj-btn:hover,
-        #adminPanel.refresh button:hover {
-            background: rgba(var(--g-rgb), .14);
-            box-shadow: 0 0 18px rgba(var(--g-rgb), .18);
-        }
-
-        #adminPanel.refresh .btn:active,
-        #adminPanel.refresh .mj-btn:active,
-        #adminPanel.refresh button:active {
-            transform: translateY(1px);
-        }
-
-        #adminPanel.refresh .btn.icon,
-        #adminPanel.refresh button.icon {
-            padding: 6px 8px;
-            min-width: 36px;
-            line-height: 1;
-            border-radius: 10px;
-        }
-
-        #adminPanel.refresh .mj-badge,
-        #adminPanel.refresh .mj-note {
-            border: 1px dashed var(--panel-border);
-            background: rgba(var(--g-rgb), .06);
-            border-radius: 10px;
-            padding: 8px 10px;
-        }
-
-        #adminPanel.refresh .menus .item {
-            border: 1px solid var(--panel-border);
-            border-radius: 12px;
-            padding: 10px;
-            margin: 10px 0;
-            background: rgba(0, 0, 0, .55);
-        }
-
-        #adminPanel.refresh .menus .item:hover {
-            background: rgba(var(--g-rgb), .05);
-        }
-
-        #adminPanel.refresh #saveSettings {
-            position: relative;
-            font-size: 14px;
-            padding: 10px 14px;
-        }
-
-        #adminPanel.refresh .admin-tabs {
-            position: sticky;
-            top: 8px;
-            z-index: 20;
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            margin: 0 0 12px;
-            padding: 8px 8px 0;
-            background: linear-gradient(180deg, rgba(0, 0, 0, .6), rgba(0, 0, 0, 0));
-            border-radius: 10px;
-        }
-
-        #adminPanel.refresh .admin-tab {
-            border: 1px solid rgba(var(--g-rgb), .16);
-            background: rgba(var(--g-rgb), .07);
-            color: var(--g);
-            font-weight: 700;
-            letter-spacing: .02em;
-            border-radius: 999px;
-            padding: 8px 12px;
-            cursor: pointer;
-            box-shadow: 0 0 8px rgba(var(--g-rgb), .08);
-            transition: background .15s, box-shadow .15s, transform .06s;
-        }
-
-        #adminPanel.refresh .admin-tab:hover {
-            background: rgba(var(--g-rgb), .12);
-        }
-
-        #adminPanel.refresh .admin-tab:active {
-            transform: translateY(1px);
-        }
-
-        #adminPanel.refresh .admin-tab.active {
-            background: rgba(var(--g-rgb), .18);
-            box-shadow: 0 0 16px rgba(var(--g-rgb), .18);
-        }
-
-        #adminPanel.refresh .admin-sec[hidden] {
-            display: none;
-        }
-
-        #adminPanel [hidden] {
-            display: none !important;
-        }
+        .power-btn { 
+            background: transparent; color: var(--g); border: 2px solid var(--line); padding: 15px 50px; 
+            font-size: 1.5rem; font-weight: bold; letter-spacing: 3px; cursor: pointer; 
+            transition: 0.3s; font-family: inherit; z-index: 500; position: relative;
+        }
+        .power-btn:hover { background: rgba(var(--g-rgb), 0.15); }
+        
+        .boot-text { margin-bottom: 10px; font-size: 1.2rem; letter-spacing: 2px; text-align: center; }
+        .progress-bar { width: 300px; height: 10px; border: 1px solid var(--line); padding: 2px; display: none; }
+        .progress-fill { height: 100%; width: 0%; background: var(--g); transition: width 0.2s steps(5, end); }
+
+        /* --- LAYOUT --- */
+        .top { display: flex; align-items: center; justify-content: space-between; gap: 12px; position: relative; z-index: 3; padding-bottom: 10px; }
+        .banner { white-space: pre; opacity: .9; font-weight: bold; }
+        .divider { height: 2px; background: linear-gradient(90deg, transparent, var(--line), transparent); margin: 10px 0; }
+        
+        .grid { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; flex: 1; min-height: 0; }
+        @media (max-width: 800px) { .grid { grid-template-columns: 1fr; grid-template-rows: 1fr auto; } }
+
+        .card { border: 1px solid var(--line); border-radius: 8px; padding: 12px; background: rgba(0, 0, 0, .35); overflow: auto; display: flex; flex-direction: column; position: relative; }
+        .h { font-weight: 700; margin: .25rem 0 .5rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px dashed var(--line); padding-bottom: 5px; font-size: 1.1rem; }
+        .tiny { font-size: .8rem; opacity: .65; }
+
+        /* --- CONSOLE --- */
+        #console { white-space: pre-wrap; line-height: 1.4; flex: 1; font-family: monospace; }
+        
+        /* --- PASSWORD --- */
+        .prompt-line { display: flex; align-items: center; font-size: 1.1rem; margin-top: 5px; }
+        /* Animation Blink */
+        .caret { display: inline-block; width: 10px; height: 1.2em; background: var(--g); animation: blink 1s infinite; margin-left: 2px; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+        
+        .hidden-input { position: absolute; opacity: 0; top: -1000px; }
+
+        /* --- MENUS --- */
+        .mlink { 
+            padding: 4px 8px; margin-bottom: 2px; border-radius: 3px; 
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        /* Hover actif uniquement sur les éléments interactifs (dossiers/boutons) */
+        .mlink.interactive { cursor: pointer; }
+        .mlink.interactive:hover { background: rgba(var(--g-rgb), .12); color: #fff; }
+        
+        /* Les notes (fichiers) ne changent pas au survol */
+        .mlink.static { cursor: default; }
+        
+        /* Fil d'Ariane Cliquable */
+        #breadcrumb { opacity: 0.6; margin-bottom: 10px; padding-bottom: 5px; border-bottom: 1px dashed var(--line); display: block; }
+        #breadcrumb .path-segment { cursor: pointer; margin-right: 5px; padding: 2px 4px; border-radius: 2px; }
+        #breadcrumb .path-segment:hover { background: rgba(var(--g-rgb), 0.1); opacity: 1.0; }
+        #breadcrumb .separator { opacity: 0.8; }
+
+
+        /* --- EDIT CONTROLS --- */
+        body:not(.editing) .edit-btn { display: none !important; }
+        body:not(.editing) .editable-text { pointer-events: none; }
+        .editable-text:hover { text-decoration: underline; cursor: text; background: rgba(255,255,255,0.1); }
+        
+        .btn-del { color: #ff5555; border: 1px solid #ff5555; font-size: 0.7rem; padding: 0 4px; cursor: pointer; font-weight: bold; background: #000; z-index: 100; border-radius: 4px; margin-left: 10px; }
+        .btn-del:hover { background: #ff5555; color: #000; }
+        
+        .btn-add { display: block; width: 100%; padding: 8px; margin-top: 10px; border: 1px dashed var(--g); text-align: center; cursor: pointer; font-weight: bold; background: rgba(var(--g-rgb), 0.05); z-index: 100; position: relative; font-size: 0.9rem; }
+        .btn-add:hover { background: rgba(var(--g-rgb), 0.2); }
+        
+        .btn-power { background: transparent; border: 1px solid #f55; color: #f55; padding: 2px 8px; font-size: 0.7rem; cursor: pointer; font-weight: bold; margin-left: 10px; }
+        .btn-power:hover { background: #f55; color: #000; }
+
+        /* --- ADMIN PANEL --- */
+        .overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, .94); display: none; place-items: center; padding: 20px; z-index: 1000; }
+        .overlay.active { display: grid; }
+        .admin-card { width: 100%; max-width: 900px; max-height: 90dvh; border: 1px solid var(--line); border-radius: 10px; background: #050505; padding: 20px; display: flex; flex-direction: column; box-shadow: 0 0 30px rgba(0,0,0,0.8); }
+        
+        .admin-tabs { display: flex; gap: 8px; margin-bottom: 15px; border-bottom: 1px solid var(--line); padding-bottom: 8px; flex-wrap: wrap; }
+        .tab-btn { background: transparent; border: 1px solid var(--line); color: var(--g); padding: 6px 12px; border-radius: 6px; cursor: pointer; }
+        .tab-btn.active { background: var(--g); color: #000; }
+        
+        .admin-content { display: none; overflow-y: auto; flex: 1; }
+        .admin-content.active { display: block; }
+        .form-row { margin-bottom: 10px; }
+        .form-row label { display: block; font-size: 0.9rem; margin-bottom: 4px; font-weight: bold; }
+        .form-input { width: 100%; background: #111; border: 1px solid var(--line); color: var(--g); padding: 6px; border-radius: 4px; }
+        textarea.form-input { min-height: 100px; font-family: monospace; font-size: 0.8rem; }
+        .btn { background: #000; color: var(--g); border: 2px solid var(--g); padding: 10px 20px; cursor: pointer; font-family: inherit; font-weight: bold; border: 1px solid var(--g); text-align: center; }
+        .btn:hover { background: var(--g); color: #000; }
+        .two { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        
+        /* ALIGNEMENT BOUTONS SYSTÈME (SAME SIZE) */
+        .sys-actions { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 15px; }
+        .sys-actions .btn, .sys-actions label { 
+            width: 100%; height: 100%; box-sizing: border-box; 
+            display: flex; justify-content: center; align-items: center; 
+            margin:0; font-size: 0.9rem; padding: 10px; 
+            border: 1px solid var(--g); background: #000; color: var(--g); cursor: pointer;
+        }
+        .sys-actions .btn:hover, .sys-actions label:hover { background: var(--g); color: #000; }
+        .sys-actions .btn-reset { border-color: #f55; color: #f55; }
+        .sys-actions .btn-reset:hover { background: #f55; color: #000; }
+
+        /* --- HACK GAME (TAILLE STANDARD) --- */
+        .hack-container { 
+            font-family: monospace; 
+            font-size: 15px; /* TAILLE STANDARD */
+            line-height: 1.4; 
+            letter-spacing: 2px;
+            display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 5px; 
+        }
+        .hack-block { display: flex; gap: 10px; }
+        .hack-hex { opacity: 0.7; text-align: right; border-right: 1px solid var(--line); padding-right: 8px; user-select: none; }
+        .hack-chars { white-space: pre; }
+        
+        .hack-word { cursor: pointer; color: var(--y); font-weight: bold; display: inline-block; transition: 0.1s; }
+        .hack-word:hover { background: var(--y); color: #000; box-shadow: 0 0 10px var(--y); }
+        
+        /* STYLE MOTS UTILISÉS (BUGGÉS) */
+        .hack-word.used {
+            color: #555 !important;
+            text-decoration: line-through;
+            pointer-events: none;
+            opacity: 0.6;
+            animation: glitch-anim 0.3s infinite;
+        }
+
+        @keyframes glitch-anim {
+            0% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(-2px, -2px); }
+            60% { transform: translate(2px, 2px); }
+            80% { transform: translate(2px, -2px); }
+            100% { transform: translate(0); }
+        }
+        
+        .hack-char { opacity: 0.6; }
+        .glitch { color: #fff; text-shadow: 0 0 3px #fff; }
+        
+        .hack-log { margin-top: 20px; border-top: 1px dashed var(--line); padding-top: 10px; min-height: 60px; font-family: monospace; }
+        .log-entry { margin-bottom: 2px; }
+        
+        /* GROS CARRÉS DE RÉSULTAT (SEUL ÉLÉMENT AGRANDI) */
+        .res-square { font-size: 1.6rem; display:inline-block; margin-right:2px; line-height: 1; vertical-align: middle; }
+
+        /* HEADER TENTATIVES (VIES) */
+        .hack-header { 
+            display: flex; align-items: center; gap: 10px; margin-bottom: 10px; 
+            border-bottom: 1px dashed var(--line); padding-bottom: 5px;
+        }
+        .try-block { display: inline-block; width: 12px; height: 16px; background: var(--g); margin-right: 4px; }
     </style>
-
-<style>
-#langAdminBlock{margin:12px 0;padding:10px;border:1px dashed var(--line);border-radius:8px}
-#langAdminBlock .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-#langAdminBlock .row .btn{padding:6px 10px;border:1px solid var(--line);background:rgba(var(--g-rgb),.06);border-radius:6px;cursor:pointer}
-#langAdminBlock .row .btn:hover{background:rgba(var(--g-rgb),.12)}
-#langAdminBlock .title{font-weight:600;margin-right:8px}
-</style>
-
-
-<style>
-#langAdminBlock{margin:12px 0;padding:10px;border:1px dashed var(--line);border-radius:8px}
-#langAdminBlock .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
-#langAdminBlock label{font-weight:600}
-#adminLangSelect{padding:6px 10px;border:1px solid var(--line);background:rgba(var(--g-rgb),.06);border-radius:6px;cursor:pointer}
-#adminLangSelect:hover{background:rgba(var(--g-rgb),.12)}
-</style>
-
-
-<style>
-#adminFooterBar{
-  position: sticky; bottom: 0; z-index: 5;
-  display: flex; gap: 10px; justify-content: flex-end; align-items: center;
-  padding: 10px; margin-top: 12px;
-  background: linear-gradient(to top, rgba(0,0,0,.35), rgba(0,0,0,0));
-  border-top: 1px solid var(--line);
-  backdrop-filter: blur(2px);
-}
-#adminFooterBar .btn{
-  padding: 8px 12px; border: 1px solid var(--line);
-  background: rgba(var(--g-rgb), .06);
-  border-radius: 8px; cursor: pointer;
-}
-#adminFooterBar .btn:hover{ background: rgba(var(--g-rgb), .12); }
-#adminFooterBar .btn.primary{ box-shadow: 0 0 0 1px rgba(var(--g-rgb), .25) inset; }
-</style>
-
 </head>
+<body data-theme="green" class="glitch-active">
 
-<body>
-    <div class="crt">
-        <div class="top">
-            <div class="banner" id="banner"></div>
-            <button id="adminToggle" class="icon" title="Menu MJ (ou Ctrl+M)">☰</button>
+    <!-- BOOT LAYER -->
+    <div id="bootLayer">
+        <img class="robco-logo" src="https://static.wikia.nocookie.net/fallout/images/b/b8/RobCo_logo.png/revision/latest/scale-to-width-down/1000?cb=20230418204031">
+        <div id="bootStart">
+            <button class="power-btn" onclick="window.App.powerOn()">INITIALISER</button>
         </div>
-        <div class="divider"></div>
-        <div class="grid">
-            <div class="card scroll" id="mainCard">
-                <div class="h" id="title"></div>
-                <div class="tiny" id="subtitle"></div>
-                <div class="divider"></div>
-                <div id="console"></div>
-                <div id="sentinel" style="height:1px"></div>
-            </div>
-            <div class="card scroll" style="display:grid;gap:10px;align-content:start">
-                <div>
-                    <div class="h">STATUT</div>
-                    <div>ALIM : <span id="statPower">STANDBY</span></div>
-                    <div>PORTE : <span id="statDoor">SCELLÉE</span></div>
-                    <div class="tiny">* V5 — FR + CRT</div>
+        <div id="bootLoad" style="display:none; text-align:center">
+            <div id="bootMsg">INITIALISATION...</div>
+            <div class="progress-bar" style="display:block"><div class="progress-fill" id="bootBar"></div></div>
+        </div>
+    </div>
+
+    <!-- INTERFACE -->
+    <div class="crt">
+        <div class="ui-layer" id="uiLayer">
+            <div class="top">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <div class="header-logo"><img src="https://static.wikia.nocookie.net/fallout/images/b/b8/RobCo_logo.png/revision/latest/scale-to-width-down/1000?cb=20230418204031" style="width:40px;"></div>
+                    <div class="banner" id="banner"></div>
                 </div>
-                <div class="divider"></div>
-                <div>
+                <div style="display:flex; gap:10px;">
+                     <!-- FIX RESET 1 : Utiliser App.forceReload pour utiliser l'URL d'origine -->
+                     <button class="btn-power" onclick="window.App.forceReload()" title="Redémarrer">⚡</button>
+                     <button class="btn" style="font-size:0.8rem; padding:6px 10px; border-width:1px" onclick="window.Admin.open()">☰ SUPERVISEUR</button>
+                </div>
+            </div>
+            <div class="divider"></div>
+            <div class="grid">
+                <div class="card" id="mainCard">
+                    <div class="tiny" id="breadcrumb"></div>
+                    <div class="h" id="pageTitle"></div>
+                    <div class="tiny" id="pageSub"></div>
+                    <div class="divider"></div>
+                    
+                    <div id="console"></div>
+
+                    <!-- ADD BUTTONS -->
+                    <div class="edit-btn" id="addControls" style="margin-top:20px; border-top:1px dashed var(--line); padding-top:10px; display:flex; gap:10px;">
+                        <div class="btn-add" style="flex:1" onclick="window.Direct.addItem('file')">+ LIGNE</div>
+                        <div class="btn-add" style="flex:1" onclick="window.Direct.addItem('folder')">+ DOSSIER</div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="h">STATUT</div>
+                    <div style="margin-bottom:5px">ALIM : <span id="statPower">OK</span></div>
+                    <div id="doorDisplay" style="margin-bottom:10px">PORTE : <span id="doorVal">...</span></div>
+                    <div class="divider"></div>
                     <div class="h">AIDE</div>
                     <div class="tiny" id="helpBox"></div>
                 </div>
@@ -770,2622 +256,701 @@ body.glitch .crt::after { opacity: .28; }
         </div>
     </div>
 
-    <div class="overlay refresh" id="adminPanel">
-        <div class="card" style="max-width:980px;width:100%">
-            <div class="h">Panneau MJ — V5</div>
-            <div class="tiny">Fermer = retour mode joueur.</div>
-            <div class="divider"></div>
-
-            <div class="two">
-                <div>
-                    <div class="h">Réglages généraux</div>
-                    <label>Couleur principale
-                        <select id="setTheme">
-                            <option value="green">Vert (RobCo)</option>
-                            <option value="amber">Ambre</option>
-                            <option value="blue">Bleu (Pip-Boy)</option>
-                        </select>
-
-    <!-- language selector hidden -->
-      <!-- translate button removed -->
-
-    
-                    </label>
-                    <label>🔐 Mot de passe au démarrage ?
-                        <select id="setGateOn">
-                            <option value="true">Oui</option>
-                            <option value="false">Non</option>
-                        </select>
-                    </label>
-                    <label>Mot de passe du JEU (écran d'auth)
-                        <input id="setGamePwd" type="password" placeholder="ABRI48">
-                    </label>
-                    <label>Mot de passe MJ (ouvrir le panneau)
-                        <input id="setAdminPwd" type="password" placeholder="(optionnel)">
-                    </label>
-                    <label>🧪 Hack dispo dès le départ ?
-                        <select id="setHackAtStart">
-                            <option value="false">Non</option>
-                            <option value="true">Oui</option>
-                        </select>
-                    </label>
-                    <label>Seuil d'échecs avant hack
-                        <input id="setHackThreshold" type="number" min="1" max="10" value="3">
-                    </label>
-                    <label>Montrer l'intro de boot à chaque lancement ?
-                        <select id="setBootAlways">
-                            <option value="false">Non</option>
-                            <option value="true">Oui</option>
-                        </select>
-                    </label>
-                    <label>Effets sonores
-                        <select id="setSfx">
-                            <option value="true">Activés</option>
-                            <option value="false">Désactivés</option>
-                        </select>
-                    </label>
-                    <label>Effets visuels CRT / glitch (fond)
-                        <select id="setGlitch">
-                            <option value="false">Désactivés</option>
-                            <option value="true">Activés</option>
-                        </select>
-                    </label>
-                    <label>Effet de glitch sur les mots du hack
-                        <select id="setWordGlitch">
-                            <option value="true">Activé</option>
-                            <option value="false">Désactivé</option>
-                        </select>
-                        <label>Banque de mots du hack
-                            <select id="setWordMode">
-                                <option value="fallout" selected>Pré-définie (Fallout)</option>
-                                <option value="custom">Personnalisée (ci-dessous)</option>
-                            </select>
-                        </label>
-
-                        <label id="customWordsWrap" style="display:none">Mots personnalisés (un par ligne)
-                            <textarea id="setHackWords" rows="6" placeholder="EX: ABRI48
-FUSION
-CAPTEUR
-..."></textarea>
-                        </label>
-
-                    </label>
-                    <label>Difficulté du hack
-                        <select id="setHackDifficulty">
-                            <option value="facile">Facile</option>
-                            <option value="normal" selected>Normal</option>
-                            <option value="difficile">Difficile</option>
-                            <option value="expert">Expert</option>
-                        </select>
-                    </label>
-                    <label>Tentatives de hack
-                        <input id="setHackTries" type="number" min="1" max="10" value="4">
-                    </label>
-                    <div class="mj-actions"><button class="btn" id="saveSettings">💾 Enregistrer réglages</button></div>
-                </div>
-
-                <div>
-
-                    <div class="h">Import / Export</div>
-                    <div class="two" style="margin-top:8px">
-                        <button class="btn" id="btnExport">⬇️ Exporter</button>
-                        <label class="btn" for="fileImport" style="cursor:pointer">⬆️ Importer</label>
-                        <input id="fileImport" type="file" accept="application/json" hidden>
+    <!-- ADMIN PANEL -->
+    <div class="overlay" id="adminPanel">
+        <div class="admin-card">
+            <div class="h">PANNEAU MJ — V7 (Final)</div>
+            <div class="admin-tabs">
+                <button class="tab-btn active" onclick="window.Admin.tab('content')">Contenu</button>
+                <button class="tab-btn" onclick="window.Admin.tab('security')">Sécurité & Porte</button>
+                <button class="tab-btn" onclick="window.Admin.tab('system')">Système</button>
+            </div>
+            <div id="adminContent">
+                
+                <div id="tab-content" class="admin-content active">
+                    <div class="form-row" style="text-align:center; padding:30px; border:1px solid var(--line)">
+                        <div class="tiny" style="margin-bottom:20px">Pour modifier le contenu (Titre, Utilisateur, Aide, Dossiers, Lignes), activez l'édition puis cliquez sur l'élément à modifier directement sur l'écran.</div>
+                        <button class="btn" style="width:100%" onclick="window.App.toggleEdit()">BASCULER MODE ÉDITION</button>
                     </div>
-                    <div class="mj-actions" style="margin-top:8px">
-                        <button class="btn" id="lockNow">🔐 Rebasculer sur l'écran d'auth</button>
-                        <button class="btn" id="unlockTerminal">🔓 Débloquer (reset compteur)</button>
+                </div>
+                <div id="tab-security" class="admin-content">
+                    <div class="two">
+                        <div class="mj-col"><div class="form-row"><label>MDP Terminal</label><input class="form-input" id="setPwd"></div><div class="form-row"><label>Verrouiller au boot ?</label><select class="form-input" id="setGateOn"><option value="true">Oui</option><option value="false">Non</option></select></div><div class="form-row"><label>Gérer une Porte ?</label><select class="form-input" id="setHasDoor"><option value="true">Oui</option><option value="false">Non</option></select></div><div class="form-row"><label>État Porte</label><input class="form-input" id="setStatDoorInit"></div></div>
+                        <div class="mj-col">
+                            <div class="form-row"><label>Activer Hack ?</label><select class="form-input" id="setHack"><option value="true">Oui</option><option value="false">Non</option></select></div>
+                            <div class="form-row"><label>Essais avant Hack</label><input class="form-input" id="setHackTries" type="number"></div>
+                            <div class="form-row"><label>Thème Mots</label><select class="form-input" id="setWordMode">
+                                <option value="securite">Sécurité</option>
+                                <option value="standard">Informatique (Standard)</option>
+                                <option value="medical">Médical</option>
+                                <option value="militaire">Militaire</option>
+                                <option value="industriel">Industriel</option>
+                                <option value="vault">Abri / Fallout</option>
+                                <option value="custom">PERSONNALISÉ (Liste ci-dessous)</option>
+                            </select></div>
+                        </div>
+                    </div>
+                    <div id="customWordsBlock" class="form-row" style="margin-top:15px; display:none; border-top:1px dashed var(--line); padding-top:10px;">
+                         <label>Mots Personnalisés (Un par ligne)</label>
+                         <textarea id="setCustomWords" class="form-input" placeholder="MOT1&#10;MOT2&#10;..."></textarea>
+                    </div>
+                </div>
+                <div id="tab-system" class="admin-content">
+                    <div class="two">
+                        <div class="mj-col">
+                            <div class="form-row"><label>Couleur</label><select class="form-input" id="setTheme"><option value="green">Vert</option><option value="amber">Ambre</option><option value="blue">Bleu</option></select></div>
+                            <div class="form-row"><label>Effets Glitch / CRT</label><select class="form-input" id="setGlitch"><option value="true">Activés</option><option value="false">Désactivés</option></select></div>
+                        </div>
+                        <div class="mj-col">
+                            <div class="form-row"><label>Effets Sonores</label><select class="form-input" id="setSfx"><option value="true">Activés</option><option value="false">Désactivés</option></select></div>
+                            <div class="form-row"><label>Toujours Booter ?</label><select class="form-input" id="setBootAlways"><option value="false">Non (Seulement 1ère fois)</option><option value="true">Oui (À chaque F5)</option></select></div>
+                            <div class="form-row"><label>MDP MJ</label><input class="form-input" type="password" id="setAdminPwd"></div>
+                            
+                            <div class="divider"></div>
+                            
+                            <div class="sys-actions">
+                                <button class="btn" onclick="window.App.exportData()">Sauvegarder (JSON)</button>
+                                <label class="btn" style="cursor:pointer">Importer<input id="fileImport" type="file" hidden onchange="window.App.importData(this)"></label>
+                                <button class="btn btn-reset" onclick="window.App.reset()">Reset</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-
-            <div class="divider"></div>
-
-            <div class="h">Éditeur</div>
-            <div id="wizRoot" class="mj-editor"></div>
-
-            <div class="divider"></div>
-            <div style="text-align:right">
-                <span class="tiny">Échap = fermer</span>
-                <div><button class="btn" id="closeAdmin">Fermer le panneau MJ</button></div>
+            <div style="margin-top:15px; text-align:right">
+                <button class="btn" onclick="window.Admin.save()">VALIDER</button>
+                <button class="btn" onclick="window.Admin.close()">FERMER</button>
             </div>
         </div>
     </div>
 
-    <audio id="sndHover" preload="auto" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
-    <audio id="sndClick" preload="auto" src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg"></audio>
-    <audio id="sndSuccess" preload="auto" src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"></audio>
-    <audio id="sndFail" preload="auto" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
-
-    <script>
-
-        (function(global) {
-            const DEF = Object.freeze({
-                banner: ['███ ROBCO INDUSTRIES (TM) ███', 'TERMLINK PROTOCOL v2.3', 'PROPERTY OF DUSTOWN BANKING CORP.'],
-                title: 'ROBCO INDUSTRIES™ TERMLINK',
-                subtitle: 'BANQUE DE DUSTOWN — TERMINAL SÉCURITÉ #48',
-                help: [
-                    '• Cliquez un menu pour naviguer.',
-                    '• En cas d’échecs répétés : hack.',
-                    '• MJ → Import/Export pour sauvegarder.'
-                ],
-                statPower: 'STANDBY',
-                statDoor: 'SCELLÉE',
-                menus: [{
-                        label: '➤ CONSULTER LES JOURNAUX',
-                        action: 'logs',
-                        enabled: true
-                    },
-                    {
-                        label: '➤ MÉMOS DE LA DIRECTION',
-                        action: 'memos',
-                        enabled: true
-                    },
-                    {
-                        label: '➤ CONTRÔLE PORTE ABRI 48',
-                        action: 'door',
-                        enabled: true
-                    },
-                    {
-                        label: '➤ À PROPOS / SYSTÈME',
-                        action: 'about',
-                        enabled: true
-                    }
-                ],
-                pages: {},
-                logs: [
-                    '- 2077-10-20 : Équipe de nuit : 3 échecs de badge aux guichets. Ticket maintenance ouvert.',
-                    '- 2077-10-22 : Livraison : 12 caisses de billets pré-guerre vers Archive B. Signature : C. Holden.',
-                    '- 2077-10-23 : Exercice d’évac annulé. Route d’abri mise à jour vers SOUS-NIVEAU 48.'
-                ],
-                memos: [
-                    '- Note au personnel : Ne rien stocker près du monte-charge de l’abri. Dalles dégagées.',
-                    '- Plainte client : Multiples faux billets — vérifier la trieuse lundi.'
-                ]
-            });
-
-            function deepClone(o) {
-                return JSON.parse(JSON.stringify(o));
-            }
-
-            function ensureData(d) {
-                const x = deepClone(DEF);
-                if (!d || typeof d !== 'object') return x;
-                for (const k of Object.keys(x)) {
-                    if (k in d) x[k] = deepClone(d[k]);
-                }
-                if (!Array.isArray(x.help)) x.help = [];
-                if (!Array.isArray(x.banner)) x.banner = [];
-                if (!Array.isArray(x.menus)) x.menus = [];
-                if (typeof x.pages !== 'object' || !x.pages) x.pages = {};
-                if (!Array.isArray(x.logs)) x.logs = [];
-                if (!Array.isArray(x.memos)) x.memos = [];
-                return x;
-            }
-
-            function el(tag, attrs, ...children) {
-                const n = document.createElement(tag);
-                const a = attrs || {};
-                Object.keys(a).forEach(function(k) {
-                    const v = a[k];
-                    if (k === 'class') n.className = v;
-                    else if (k === 'style') n.setAttribute('style', v);
-                    else if (k.indexOf('on') === 0 && typeof v === 'function') n.addEventListener(k.slice(2), v);
-                    else if (v !== undefined && v !== null) n.setAttribute(k, v);
-                });
-                for (let i = 0; i < children.length; i++) {
-                    const c = children[i];
-                    if (c == null) continue;
-                    n.appendChild(typeof c === 'string' ? document.createTextNode(c) : c);
-                }
-                return n;
-            }
-
-            function iconBtn(label, title, handler) {
-                return el('button', {
-                    class: 'mj-btn',
-                    title: title,
-                    onclick: handler
-                }, label);
-            }
-
-            function buildMenusUI(root, data, notify) {
-                data.pages = data.pages || {};
-                const wrap = el('div', {
-                    class: 'mj-col'
-                });
-                wrap.appendChild(el('div', {
-                    class: 'mj-h'
-                }, 'Menus'));
-                wrap.appendChild(el('div', {
-                    class: 'mj-tiny'
-                }, 'Type "page" → lie 1..n pages. Un menu ajouté crée automatiquement une page.'));
-                const list = el('div', {
-                    class: 'mj-list'
-                });
-
-                function ensurePage(id, title) {
-                    data.pages = data.pages || {};
-                    if (!data.pages[id]) data.pages[id] = {
-                        title: title || 'PAGE',
-                        body: '(contenu)'
-                    };
-                    try { document.dispatchEvent(new CustomEvent('mj-pages-updated')); } catch(e) {}
-
-                }
-
-                function newPageId() {
-                    let base = 'page' + (Object.keys(data.pages || {}).length + 1);
-                    while (data.pages && data.pages[base]) base += '_x';
-                    return base;
-                }
-
-                function rowItem(item, idx) {
-                    const chk = el('input', {
-                        type: 'checkbox'
-                    });
-                    chk.checked = item.enabled !== false;
-                    const label = el('input', {
-                        type: 'text',
-                        value: item.label || ''
-                    });
-                    const sel = el('select');
-                    ['logs', 'memos', 'door', 'about', 'page'].forEach(function(a) {
-                        sel.appendChild(el('option', {
-                            value: a,
-                            selected: item.action === a
-                        }, a));
-                    });
-
-                    const pagesWrap = el('div', {
-                        class: 'mj-field',
-                        style: item.action === 'page' ? '' : 'display:none'
-                    });
-                    const pagesInput = el('input', {
-                        type: 'text',
-                        placeholder: 'IDs de pages séparés par des virgules'
-                    });
-                    let addPageBtn;
-addPageBtn = iconBtn('➕ Nouvelle page liée', 'Créer et lier une page', function() {
-addPageBtn.style.display = (sel.value === 'page') ? '' : 'none';
-                        const id = newPageId();
-                        ensurePage(id, label.value.trim() || 'PAGE');
-                        const current = pagesInput.value.split(',').map(function(s) {
-                            return s.trim();
-                        }).filter(Boolean);
-                        current.push(id);
-                        pagesInput.value = current.join(', ');
-                        saveRow();
-
-lblPages.style.display = '';
-pagesInput.style.display = '';
-try { document.dispatchEvent(new CustomEvent('mj-pages-updated')); } catch(e) {}
-                    });
-
-                    let pagesArr = Array.isArray(item.pages) ? item.pages.slice() : (item.pageId ? [item.pageId] : []);
-                pagesInput.value = pagesArr.join(', ');
-
-const lblPages = el('label', {}, 'Pages liées');
-pagesWrap.appendChild(lblPages);
-pagesWrap.appendChild(pagesInput);
-
-const hasIds = pagesInput.value.trim().length > 0;
-pagesWrap.style.display   = (sel.value === 'page') ? '' : 'none';
-lblPages.style.display    = (sel.value === 'page' && hasIds) ? '' : 'none';
-pagesInput.style.display  = (sel.value === 'page' && hasIds) ? '' : 'none';
-
-addPageBtn.style.display  = (sel.value === 'page') ? '' : 'none';
-
-pagesWrap.appendChild(addPageBtn);
-
-                    sel.addEventListener('change', function() {
-  const isPage = (sel.value === 'page');
-  const hasIds = pagesInput.value.trim().length > 0;
-
-  pagesWrap.style.display   = isPage ? '' : 'none';
-  lblPages.style.display    = (isPage && hasIds) ? '' : 'none';
-  pagesInput.style.display  = (isPage && hasIds) ? '' : 'none';
-  if (addPageBtn) addPageBtn.style.display = isPage ? '' : 'none';
-
-  saveRow();
-});
-
-                    const up = iconBtn('↑', 'Monter', function() {
-                        move(idx, -1);
-                    });
-                    const down = iconBtn('↓', 'Descendre', function() {
-                        move(idx, 1);
-                    });
-                    const del = iconBtn('🗑️', 'Supprimer', function() {
-                        data.menus.splice(idx, 1);
-                        render();
-                        notify();
-                    });
-
-                    function saveRow() {
-                        const base = {
-                            label: label.value.trim() || ('Entrée ' + (idx + 1)),
-                            enabled: chk.checked,
-                            action: sel.value
-                        };
-                        if (sel.value === 'page') {
-                            const ids = pagesInput.value.split(',').map(function(s) {
-                                return s.trim();
-                            }).filter(Boolean);
-
-                            if (ids.length === 0) {
-                                const id = newPageId();
-                                ensurePage(id, base.label);
-                                ids.push(id);
-                            }
-                            base.pages = ids;
-                        }
-                        data.menus[idx] = base;
-                        if (typeof notify === 'function') notify();
-                    }
-
-                    chk.addEventListener('change', saveRow);
-                    label.addEventListener('input', saveRow);
-                    pagesInput.addEventListener('input', saveRow);
-
-                    const row = el('div', {
-                            class: 'mj-item'
-                        },
-                        chk,
-                        el('div', {
-                            class: 'mj-grow'
-                        }, label),
-                        el('div', {}, sel),
-                        el('div', {
-                            class: 'mj-grow'
-                        }, pagesWrap),
-                        el('div', {
-                            class: 'mj-actions'
-                        }, up, down, del)
-                    );
-                    return row;
-                }
-
-                function move(i, dir) {
-                    const j = i + dir;
-                    if (j < 0 || j >= data.menus.length) return;
-                    const t = data.menus[i];
-                    data.menus[i] = data.menus[j];
-                    data.menus[j] = t;
-                    render();
-                    if (typeof notify === 'function') notify();
-                }
-
-                function render() {
-                    list.innerHTML = '';
-                    data.menus.forEach(function(m, i) {
-                        list.appendChild(rowItem(m, i));
-                    });
-                }
-
-                const add = iconBtn('+ Ajouter un menu', 'Ajouter', function() {
-
-                    const id = newPageId();
-                    ensurePage(id, 'NOUVELLE PAGE');
-                    data.menus.push({
-                        label: '➤ NOUVEL ÉLÉMENT',
-                        action: 'page',
-                        enabled: true,
-                        pages: [id]
-                    });
-                    render();
-                    if (typeof notify === 'function') notify();
-                });
-
-                wrap.appendChild(list);
-                wrap.appendChild(el('div', {
-                    class: 'mj-actions'
-                }, add));
-                render();
-                root.appendChild(wrap);
-            }
-
-            function buildPagesUI(root, data, notify) {
-                const wrap = el('div', {
-                    class: 'mj-col'
-                });
-                wrap.appendChild(el('div', {
-                    class: 'mj-h'
-                }, 'Pages personnalisées'));
-
-                const bar = el('div', {
-                    class: 'mj-flex'
-                });
-                const sel = el('select', {
-                    class: 'mj-grow'
-                });
-
-                function newPageId() {
-                    let id = 'page' + (Object.keys(data.pages || {}).length + 1);
-                    while ((data.pages || {})[id]) id += '_x';
-                    return id;
-                }
-
-                const add = el('button', {
-                    class: 'mj-btn',
-                    onclick: function() {
-                        const id = newPageId();
-                        data.pages[id] = {
-                            title: 'PAGE',
-                            body: '(contenu)'
-                        };
-                        renderList(id);
-                        if (typeof notify === 'function') notify();
-                    }
-                }, '+ Nouvelle page');
-
-                const del = el('button', {
-                    class: 'mj-btn',
-                    onclick: function() {
-                        const id = sel.value;
-                        if (!id) return;
-                        delete data.pages[id];
-                        renderList(Object.keys(data.pages)[0] || '');
-                        if (typeof notify === 'function') notify();
-                    }
-                }, '🗑️ Supprimer');
-
-                bar.appendChild(sel);
-                bar.appendChild(add);
-                bar.appendChild(del);
-
-                const title = el('input', {
-                    type: 'text',
-                    placeholder: 'Titre'
-                });
-                const body = el('textarea', {
-                    placeholder: 'Contenu'
-                });
-
-                function renderList(pickId) {
-                    sel.innerHTML = '';
-                    const ids = Object.keys(data.pages || {});
-                    ids.forEach(function(id) {
-                        sel.appendChild(el('option', {
-                            value: id,
-                            selected: id === pickId
-                        }, id));
-                    });
-                    if (!ids.length) {
-                        title.value = '';
-                        body.value = '';
-                        title.disabled = true;
-                        body.disabled = true;
-                        del.disabled = true;
-                    } else {
-                        title.disabled = false;
-                        body.disabled = false;
-                        del.disabled = false;
-                        sel.value = pickId || ids[0];
-                        const p = data.pages[sel.value];
-                        title.value = p.title || '';
-                        body.value = p.body || '';
-                    }
-                }
-
-                sel.addEventListener('change', function() {
-                    const p = data.pages[sel.value];
-                    if (!p) return;
-                    title.value = p.title || '';
-                    body.value = p.body || '';
-                });
-                title.addEventListener('input', function() {
-                    const id = sel.value;
-                    if (!data.pages[id]) return;
-                    data.pages[id].title = title.value;
-                    if (typeof notify === 'function') notify();
-                });
-                body.addEventListener('input', function() {
-                    const id = sel.value;
-                    if (!data.pages[id]) return;
-                    data.pages[id].body = body.value;
-                    if (typeof notify === 'function') notify();
-                });
-
-                renderList(Object.keys(data.pages || {})[0] || '');
-
-document.addEventListener('mj-pages-updated', function(){
-  renderList(sel.value);
-});
-
-                wrap.appendChild(bar);
-                wrap.appendChild(el('div', {
-                    class: 'mj-field'
-                }, el('label', {}, 'Titre'), title));
-                wrap.appendChild(el('div', {
-                    class: 'mj-field'
-                }, el('label', {}, 'Corps'), body));
-                root.appendChild(wrap);
-            }
-
-            function buildBannerUI(root, data, notify) {
-                const wrap = el('div', {
-                    class: 'mj-col'
-                });
-                wrap.appendChild(el('div', {
-                    class: 'mj-h'
-                }, 'Titres & Bannière'));
-
-                const title = el('input', {
-                    type: 'text',
-                    value: data.title || ''
-                });
-                const subtitle = el('input', {
-                    type: 'text',
-                    value: data.subtitle || ''
-                });
-                const banner = el('textarea');
-                banner.value = (data.banner || []).join('\n');
-
-                title.addEventListener('input', function() {
-                    data.title = title.value;
-                    if (typeof notify === 'function') notify();
-                });
-                subtitle.addEventListener('input', function() {
-                    data.subtitle = subtitle.value;
-                    if (typeof notify === 'function') notify();
-                });
-                banner.addEventListener('input', function() {
-                    data.banner = String(banner.value).split('\n').map(function(s) {
-                        return s.trim();
-                    }).filter(Boolean);
-                    if (typeof notify === 'function') notify();
-                });
-
-                wrap.appendChild(el('div', {
-                    class: 'mj-field'
-                }, el('label', {}, 'Titre'), title));
-                wrap.appendChild(el('div', {
-                    class: 'mj-field'
-                }, el('label', {}, 'Sous-titre'), subtitle));
-                wrap.appendChild(el('div', {
-                    class: 'mj-field'
-                }, el('label', {}, 'Bannière (1 ligne = 1 entrée)'), banner));
-
-                root.appendChild(wrap);
-            }
-
-            function buildStatusUI(root, data, notify) {
-                const wrap = el('div', {
-                    class: 'mj-col'
-                });
-                wrap.appendChild(el('div', {
-                    class: 'mj-h'
-                }, 'Aide & Statuts'));
-                const help = el('textarea');
-                help.value = (data.help || []).join('\n');
-                const pwr = el('input', {
-                    type: 'text',
-                    value: data.statPower || ''
-                });
-                const door = el('input', {
-                    type: 'text',
-                    value: data.statDoor || ''
-                });
-
-                help.addEventListener('input', function() {
-                    data.help = String(help.value).split('\n').map(function(s) {
-                        return s.trim();
-                    }).filter(Boolean);
-                    if (typeof notify === 'function') notify();
-                });
-                pwr.addEventListener('input', function() {
-                    data.statPower = pwr.value;
-                    if (typeof notify === 'function') notify();
-                });
-                door.addEventListener('input', function() {
-                    data.statDoor = door.value;
-                    if (typeof notify === 'function') notify();
-                });
-
-                wrap.appendChild(el('div', {
-                    class: 'mj-field'
-                }, el('label', {}, 'Aide (1 ligne = 1 astuce)'), help));
-                wrap.appendChild(el('div', {
-                    class: 'mj-field'
-                }, el('label', {}, 'ALIM'), pwr));
-                wrap.appendChild(el('div', {
-                    class: 'mj-field'
-                }, el('label', {}, 'PORTE'), door));
-                root.appendChild(wrap);
-            }
-
-            function buildLogsUI(root, data, notify) {
-                const wrap = el('div', {
-                    class: 'mj-row mj-row-1'
-                });
-                const colL = el('div', {
-                    class: 'mj-col'
-                });
-                const colR = el('div', {
-                    class: 'mj-col'
-                });
-                colL.appendChild(el('div', {
-                    class: 'mj-h'
-                }, 'Journaux'));
-                colR.appendChild(el('div', {
-                    class: 'mj-h'
-                }, 'Mémos'));
-                const logs = el('textarea');
-                logs.value = (data.logs || []).join('\n');
-                const memos = el('textarea');
-                memos.value = (data.memos || []).join('\n');
-
-                logs.addEventListener('input', function() {
-                    data.logs = String(logs.value).split('\n').map(function(s) {
-                        return s.trim();
-                    }).filter(Boolean);
-                    if (typeof notify === 'function') notify();
-                });
-                memos.addEventListener('input', function() {
-                    data.memos = String(memos.value).split('\n').map(function(s) {
-                        return s.trim();
-                    }).filter(Boolean);
-                    if (typeof notify === 'function') notify();
-                });
-
-                colL.appendChild(logs);
-                colR.appendChild(memos);
-                wrap.appendChild(colL);
-                wrap.appendChild(colR);
-                root.appendChild(wrap);
-            }
-
-            function buildFooter(root, getData, opts) {
-                const bar = el('div', {
-                    class: 'mj-divider'
-                });
-                const row = el('div', {
-                        class: 'mj-flex'
-                    },
-                    el('div', {
-                        class: 'mj-note mj-grow mj-muted'
-                    }, 'Astuce : "Enregistrer" renvoie l’objet complet.'),
-                    iconBtn('💾 Enregistrer', 'onSave()', function() {
-                        if (opts.onSave) opts.onSave(getData());
-                    }),
-                    iconBtn('Afficher JSON', 'Debug', function() {
-                        try {
-                            console.log('MJEditor data:', getData());
-                        } catch (e) {}
-                    })
-                );
-                root.appendChild(bar);
-                root.appendChild(row);
-            }
-
-            function renderTabs(container, order) {
-                const bar = el('div', {
-                    class: 'mj-tabs'
-                });
-                const pages = {};
-                order.forEach(function(id) {
-                    const btn = el('button', {
-                        class: 'mj-btn',
-                        'data-tab': id
-                    }, id.toUpperCase());
-                    const page = el('div', {
-                        class: 'mj-tabpage',
-                        id: 'tab-' + id
-                    });
-                    btn.addEventListener('click', function() {
-                        const all = container.querySelectorAll('.mj-tabpage');
-                        for (let i = 0; i < all.length; i++) {
-                            all[i].classList.remove('active');
-                        }
-                        page.classList.add('active');
-                    });
-                    bar.appendChild(btn);
-                    container.appendChild(bar);
-                    container.appendChild(page);
-                    pages[id] = page;
-                });
-                setTimeout(function() {
-                    const first = container.querySelector('.mj-tabpage');
-                    if (first) first.classList.add('active');
-                }, 0);
-                return {
-                    bar: bar,
-                    pages: pages
-                };
-            }
-
-            function renderTabsAndPages(root, data, opts) {
-                const tabs = (opts.tabs || ['menus', 'pages', 'banniere', 'statuts', 'journaux']);
-                const tmp = renderTabs(root, tabs);
-                const pages = tmp.pages;
-
-                const notify = function() {
-                    if (opts.onChange) opts.onChange(getData());
-                };
-                const getData = function() {
-                    return JSON.parse(JSON.stringify(data));
-                };
-
-                if (pages.menus) buildMenusUI(pages.menus, data, notify);
-                if (pages.pages) buildPagesUI(pages.pages, data, notify);
-                if (pages.banniere) buildBannerUI(pages.banniere, data, notify);
-                if (pages.statuts) buildStatusUI(pages.statuts, data, notify);
-                if (pages.journaux) buildLogsUI(pages.journaux, data, notify);
-
-                buildFooter(root, getData, opts);
-                return {
-                    getData: getData
-                };
-            }
-
-            const MJ_API = {
-                init: function(container, initialData, options) {
-                    const root = (typeof container === 'string') ? document.querySelector(container) : container;
-                    if (!root) throw new Error('MJEditor: container introuvable');
-                    const opts = Object.assign({
-                        onChange: null,
-                        onSave: null,
-                        tabs: ['menus', 'pages', 'banniere', 'statuts', 'journaux']
-                    }, options || {});
-                    const data = ensureData(initialData);
-                    root.innerHTML = '';
-                    const api = renderTabsAndPages(root, data, opts);
-                    return api;
-                },
-                defaults: function() {
-                    return deepClone(DEF);
-                }
-            };
-
-            try {
-                global.MJEditor = MJ_API;
-            } catch (e) {}
-            try {
-                window.MJEditor = MJ_API;
-            } catch (e) {}
-            try {
-                globalThis.MJEditor = MJ_API;
-            } catch (e) {}
-        })(typeof window !== 'undefined' ? window : this);
-    </script>
-
-    <script>
-        (function() {
-            const $ = (s) => document.querySelector(s);
-
-            function esc(s) {
-                return String(s).replace(/[&<>"']/g, c => ({
-                    '&': '&amp;',
-                    '<': '&lt;',
-                    '>': '&gt;',
-                    '"': '&quot;',
-                    "'": '&#39;'
-                } [c]));
-            }
-
-            function save(k, v) {
-                try {
-                    localStorage.setItem(k, JSON.stringify(v));
-                } catch {}
-            }
-
-            function load(k, d) {
-                try {
-                    const r = localStorage.getItem(k);
-                    return r ? JSON.parse(r) : d;
-                } catch {
-                    return d;
-                }
-            }
-
-            function safePlay(a) {
-                if (!a) return;
-                try {
-                    const p = a.currentTime > 0 && !a.paused ? (a.pause(), a.currentTime = 0, a.play()) : a.play();
-                    if (p && p.catch) p.catch(() => {});
-                } catch {}
-            }
-
-            /* ==== ESPACE DE SAUVEGARDE (v10) ==== */
-            const KSET = 'ft_settings_inline_v10';
-            const KDATA = 'ft_data_inline_v10';
-            const KSTATE = 'ft_state_inline_v10';
-            const KBOOT = 'ft_boot_seen_inline_v10';
-
-            const BANKS = {
-                fallout: ['ABRI', 'COGITEUR', 'TERMINAL', 'ROBCO', 'PAROXYSME', 'RADIATION', 'GEIGER', 'NUCLEAIRE', 'ATOMIQUE', 'PLASMA', 'LASER', 'SERVOMOTEUR', 'GENERATEUR', 'SECURITE', 'SERRURE', 'INTRUSION', 'OVERRIDE', 'PROTOCOL', 'ENCLAVE', 'FRATRIE', 'GOULE', 'MUTANT', 'DECHETS', 'RUINES', 'ABRITAGE', 'CRYOGENE', 'EXPERIMENT', 'DIAGNOSTIC', 'REPARATION', 'MAINTENANCE', 'ARCHIVES', 'CONSOLE', 'BUNKER', 'TRAPPE', 'ELEVATEUR', 'MONTECHARGE', 'SERVEUR', 'RESEAU', 'SOUSSOL', 'BANQUIERE', 'DOSSIERS', 'BILLETTERIE', 'FUSIBLES', 'URGENCES', 'ALARME', 'CAMERAS', 'HYDRAULIQUE', 'JOINTURES', 'VERROUS', 'PLATEFORME'],
-                securite: ['COFFRE', 'CADENAS', 'ALARME', 'INTRUSION', 'VERROU', 'PROTECTION', 'PROTOCOLE', 'CLEF', 'SURVEILLER', 'AGREMENT', 'ACCES', 'BADGE', 'CAPTEURS', 'CAMERAS', 'GARDE', 'PATROUILLE', 'QUARANTAINE', 'PAREFEU', 'CHIFFRAGE', 'DECHIFFRE', 'AUTHENTIF', 'ACCEPTION', 'LISTEBLANC', 'LISTENOIR'],
-                informatique: ['SYSTEME', 'MEMOIRE', 'TERMINAL', 'RESEAU', 'PAQUET', 'PROGRAMME', 'FICHIER', 'DOSSIER', 'REGISTRE', 'KERNEL', 'BOOTSECT', 'FIRMWARE', 'ALGORITHME', 'SOCKET', 'SERIALISE', 'COMPILATEUR', 'PROCESSUS', 'THREAD', 'BUFFER', 'PILOTES', 'ETATMAJOR'],
-                industriel: ['MOTEUR', 'TURBINE', 'ROUILLE', 'ATELIER', 'USINAGE', 'METALLURGIE', 'CONVOYEUR', 'HYDRAULIQUE', 'POMPAGE', 'VANNES', 'MANOMETRE', 'SOUDEUSE', 'RIVETAGE', 'PALAN', 'GRUEPORT', 'PLANCHERS', 'ECHAFAUDS', 'CINTREUSE', 'FONDERIE', 'FRAISEUSE'],
-                militaire: ['SOLDAT', 'CANON', 'ARMEE', 'GUERRE', 'ARSENAL', 'MISSILE', 'CHAR', 'GARNISON', 'CASERNE', 'ORDRE', 'TACTIQUE', 'STRATEGIE', 'COMMANDO', 'ESCADRON', 'ARTILLERIE', 'FUSIL', 'MUNITIONS', 'GILET', 'CASQUE', 'BALISTIQUE'],
-                medical: ['DOCTEUR', 'SERINGUE', 'VACCIN', 'VIRUS', 'SOINS', 'HOPITAL', 'PANSEMENT', 'PLASMIDE', 'ANALYSES', 'TRIAGE', 'DIAGNOSE', 'ANTIDOTE', 'CHIRURGIE', 'STIMULANT', 'RADAWAY', 'ANTIRAD', 'PROTHESE', 'GREFFONS', 'STERILISE', 'VENTILATEUR'],
-                general: ['USINE', 'METRO', 'ARCHIVE', 'BUREAUX', 'COULOIRS', 'ASCENSEUR', 'PLATEAU', 'CABLES', 'GENIE', 'SCANNER', 'BATTERIE', 'ECRAN', 'CLAVIER', 'MONITEUR', 'ANTENNE', 'RECEPTEUR', 'EMETTEUR', 'SIGNAL', 'RELAIS', 'PONTAGE', 'BATIMENT', 'ENTREPOT', 'STATION']
-            };
-
-            const defSet = {
-  lang: 'fr',
-                gateOn: true,
-                // ↓ nouveaux réglages
-                gamePwd: 'ABRI48', // mot de passe du JEU (auth écran)
-                adminPwd: '', // mot de passe du panneau MJ
-                // ↑
-                sfx: true,
-                bootAlways: false,
-                glitch: false,
-                wordGlitch: true,
-                hackAtStart: false,
-                hackThreshold: 3,
-                hackDifficulty: 'normal',
-                hackTries: 4,
-                wordMode: 'fallout',
-                likeness: 'both',
-                hackWords: [],
-                theme: 'green'
-            };
-            const defData = {
-                banner: ['███ ROBCO INDUSTRIES (TM) ███', 'TERMLINK PROTOCOL v2.3', 'PROPERTY OF DUSTOWN BANKING CORP.'],
-                title: 'ROBCO INDUSTRIES™ TERMLINK',
-                subtitle: 'BANQUE DE DUSTOWN — TERMINAL SÉCURITÉ #48',
-                help: ['• Cliquez un menu pour naviguer.', '• En cas d’échecs répétés : hack.', '• MJ → Import/Export pour sauvegarder.'],
-                statPower: 'STANDBY',
-                statDoor: 'SCELLÉE',
-                menus: [{
-                    label: '➤ CONSULTER LES JOURNAUX',
-                    action: 'logs',
-                    enabled: true
-                }, {
-                    label: '➤ MÉMOS DE LA DIRECTION',
-                    action: 'memos',
-                    enabled: true
-                }, {
-                    label: '➤ CONTRÔLE PORTE ABRI 48',
-                    action: 'door',
-                    enabled: true
-                }, {
-                    label: '➤ À PROPOS / SYSTÈME',
-                    action: 'about',
-                    enabled: true
-                }],
-                pages: {},
-                logs: ['- 2077-10-20 : Équipe de nuit : 3 échecs de badge aux guichets. Ticket maintenance ouvert.', '- 2077-10-22 : Livraison : 12 caisses de billets pré-guerre vers Archive B. Signature : C. Holden.', '- 2077-10-23 : Exercice d’évac annulé. Route d’abri mise à jour vers SOUS-NIVEAU 48.'],
-                memos: ['- Note au personnel : Ne rien stocker près du monte-charge de l’abri. Dalles dégagées.', '- Plainte client : Multiples faux billets — vérifier la trieuse lundi.']
-            };
-
-            let set = defSet,
-                data = defData,
-                state = {
-                    lockout: false,
-                    wrong: 0
-                };
-
-            const el = {
-                banner: $('#banner'),
-                title: $('#title'),
-                subtitle: $('#subtitle'),
-                console: $('#console'),
-                sentinel: $('#sentinel'),
-                mainCard: $('#mainCard'),
-                adminToggle: $('#adminToggle'),
-                adminPanel: $('#adminPanel'),
-                setGateOn: $('#setGateOn'),
-                setHackAtStart: $('#setHackAtStart'),
-                setHackThreshold: $('#setHackThreshold'),
-                setBootAlways: $('#setBootAlways'),
-                setHackDifficulty: $('#setHackDifficulty'),
-                setHackTries: $('#setHackTries'),
-                setSfx: $('#setSfx'),
-                setGlitch: $('#setGlitch'),
-                setWordGlitch: $('#setWordGlitch'),
-                sndHover: $('#sndHover'),
-                sndClick: $('#sndClick'),
-                sndSuccess: $('#sndSuccess'),
-                sndFail: $('#sndFail'),
-                statDoor: $('#statDoor'),
-                statPower: $('#statPower'),
-                helpBox: $('#helpBox')
-
-            };
-
-            /* ---- Safe load with schema guard ---- */
-            (function safeInit() {
-                try {
-                    const rawSet = load(KSET, defSet);
-                    const rawData = load(KDATA, defData);
-                    const rawState = load(KSTATE, {
-                        lockout: false,
-                        wrong: 0
-                    });
-                    // Valide minimalement
-                    set = Object.assign({}, defSet, typeof rawSet === 'object' && rawSet ? rawSet : {});
-                    data = Object.assign({}, defData, typeof rawData === 'object' && rawData ? rawData : {});
-                    // Correction de types
-                    if (!Array.isArray(data.banner)) data.banner = [].concat(defData.banner);
-                    if (!Array.isArray(data.help)) data.help = [].concat(defData.help);
-                    if (!Array.isArray(data.menus)) data.menus = [].concat(defData.menus);
-                    if (typeof data.pages !== 'object' || !data.pages) data.pages = {};
-                    if (!Array.isArray(data.logs)) data.logs = [].concat(defData.logs);
-                    if (!Array.isArray(data.memos)) data.memos = [].concat(defData.memos);
-                    state = (typeof rawState === 'object' && rawState) ? rawState : {
-                        lockout: false,
-                        wrong: 0
-                    };
-                } catch (e) {
-                    // En cas de corruption locale, on repart sur défaut
-                    console.warn('Init data failed, using defaults:', e);
-                    set = defSet;
-                    data = defData;
-                    state = {
-                        lockout: false,
-                        wrong: 0
-                    };
-                }
-                // Migration: si ancien projet n'a pas gamePwd, on copie l'existant
-                if (!('gamePwd' in set)) {
-                    set.gamePwd = set.adminPwd || 'ABRI48';
-                    save(KSET, set);
-                }
-
-            })();
-
-            /* -- Normalisation menus : pageId -> pages[], auto-création si manquant -- */
-            (function normalizeMenus() {
-                if (!Array.isArray(data.menus)) data.menus = [];
-                data.pages = data.pages || {};
-                data.menus = data.menus.map((m) => {
-                    const out = Object.assign({
-                        enabled: true
-                    }, m || {});
-                    if (out.action === 'page') {
-                        if (out.pageId && !out.pages) out.pages = [String(out.pageId)];
-                        if (!Array.isArray(out.pages)) out.pages = [];
-                        if (out.pages.length === 0) {
-                            const autoId = 'page' + (Object.keys(data.pages || {}).length + 1);
-                            data.pages = data.pages || {};
-                            data.pages[autoId] = {
-                                title: (out.label || 'PAGE'),
-                                body: '(nouvelle page)'
-                            };
-                            out.pages.push(autoId);
-                        }
-                    }
-                    return out;
-                });
-            })();
-
-            function scrollToEnd() {
-                el.sentinel && el.sentinel.scrollIntoView({
-                    block: 'end'
-                });
-                if (el.console) {
-                    el.console.scrollTop = el.console.scrollHeight;
-                }
-                if (el.mainCard) {
-                    el.mainCard.scrollTop = el.mainCard.scrollHeight;
-                }
-            }
-
-            function print(line = '') {
-                el.console && el.console.insertAdjacentText('beforeend', (el.console.textContent ? "\n" : '') + line);
-                scrollToEnd();
-            }
-
-            function typeLines(lines, speed, done) {
-                if (!el.console) {
-                    done && done();
-                    return;
-                }
-                let i = 0,
-                    j = 0;
-                const caret = document.createElement('span');
-                caret.className = 'caret';
-                el.console.appendChild(caret);
-                const step = () => {
-                    if (i >= lines.length) {
-                        setTimeout(() => {
-                            caret.remove();
-                            done && done();
-                        }, 200);
-                        return;
-                    }
-                    const L = String(lines[i] || '');
-                    if (j === 0) {
-                        if (el.console.lastChild !== caret) el.console.appendChild(caret);
-                        if (el.console.textContent && !el.console.textContent.endsWith('\n')) el.console.insertAdjacentText('beforeend', '\n');
-                    }
-                    el.console.insertAdjacentText('beforeend', L[j++] || '');
-                    scrollToEnd();
-                    if (j >= L.length) {
-                        i++;
-                        j = 0;
-                    }
-                    setTimeout(step, speed);
-                };
-                step();
-            }
-
-            function applyTheme(){
-  const theme = (set.theme === 'amber' || set.theme === 'blue') ? set.theme : 'green';
-  document.documentElement.setAttribute('data-theme', theme);
-}
-
-            function renderHeader() {
-                el.banner.textContent = (data.banner || []).join('\n');
-                el.title.textContent = data.title || '';
-                el.subtitle.textContent = data.subtitle || '';
-                document.body.classList.toggle('glitch', !!set.glitch);
-                applyTheme(); // <-- ajout
-                el.statPower.textContent = data.statPower || 'STANDBY';
-                el.statDoor.textContent = data.statDoor || 'SCELLÉE';
-                const lines = Array.isArray(data.help) ? data.help : [];
-                el.helpBox.innerHTML = lines.map(esc).join('<br>');
-            }
-
-            /* ---- Boot + gate ---- */
-            function boot() {
-                if (el.console) el.console.textContent = '';
-                const seen = load(KBOOT, false);
-                const goNext = () => {
-                    try {
-                        save(KBOOT, true);
-                        nextAfterBoot();
-                    } catch {
-                        nextAfterBoot();
-                    }
-                };
-                if (!seen || set.bootAlways) {
-                    typeLines([
-                        'ROBCO INDUSTRIES™ TERMLINK PROTOCOL',
-                        '©2075-2077 ROBCO INDUSTRIES',
-                        '',
-                        'Vérification mémoire........... OK',
-                        'Initialisation E/S............ OK',
-                        'Diagnostic réseau............. OK',
-                        'Chargement modules sécurité... OK',
-                        '',
-                        'Démarrage de l\'interface...'
-                    ], 18, goNext);
-                } else {
-                    nextAfterBoot();
-                }
-            }
-
-            function nextAfterBoot() {
-                if (set.gateOn) {
-                    state.lockout = false;
-                    state.wrong = 0;
-                    save(KSTATE, state);
-                    askPassword();
-                } else {
-                    welcome();
-                }
-            }
-
-            function askPassword() {
-                print('');
-                print('AUTHENTIFICATION — TERMINAL ABRI 48');
-                print('Entrez le mot de passe pour accéder au terminal.');
-                if (set.hackAtStart) print('Tapez H pour tenter un hack.');
-                showPasswordPrompt();
-            }
-
-            function showPasswordPrompt() {
-                const wrap = document.createElement('div');
-                wrap.className = 'prompt';
-                wrap.innerHTML = '\n> MOT DE PASSE : ';
-                const input = document.createElement('input');
-                input.type = 'password';
-                input.autofocus = true;
-                Object.assign(input.style, {
-                    background: 'transparent',
-                    color: 'var(--g)',
-                    border: 'none',
-                    outline: 'none',
-                    font: 'inherit'
-                });
-                input.size = 12;
-                input.placeholder = '•••••••';
-                const btn = document.createElement('button');
-                btn.className = 'btn';
-                btn.textContent = 'Entrer';
-                btn.style.marginLeft = '8px';
-                wrap.appendChild(input);
-                wrap.appendChild(btn);
-                el.console.appendChild(wrap);
-                input.focus();
-                scrollToEnd();
-                const submit = () => {
-                    const v = String(input.value || '');
-                    wrap.remove();
-                    if (v.toUpperCase() === 'H' && set.hackAtStart) {
-                        startHack();
-                        return;
-                    }
-                    const ok = v === String(set.gamePwd || '');
-                    if (!ok) {
-                        state.wrong = (state.wrong || 0) + 1;
-                        save(KSTATE, state);
-                        print('Accès refusé.');
-                        if (state.wrong >= (set.hackThreshold || 3) && !state.lockout) {
-                            print('Échec répété — Tenter un hack ? (Y/N)');
-                            askHack();
-                        } else {
-                            showPasswordPrompt();
-                        }
-                    } else {
-                        state.wrong = 0;
-                        save(KSTATE, state);
-                        welcome();
-                    }
-                };
-                btn.addEventListener('click', submit);
-                input.addEventListener('keydown', e => {
-                    if (e.key === 'Enter') submit();
-                });
-            }
-
-            function askHack() {
-                const wrap = document.createElement('div');
-                wrap.className = 'prompt';
-                wrap.innerHTML = '> ';
-                const input = document.createElement('input');
-                input.size = 2;
-                input.maxLength = 1;
-                Object.assign(input.style, {
-                    background: 'transparent',
-                    color: 'var(--g)',
-                    border: 'none',
-                    outline: 'none',
-                    font: 'inherit'
-                });
-                wrap.appendChild(input);
-                el.console.appendChild(wrap);
-                input.focus();
-                scrollToEnd();
-                const submit = () => {
-                    const v = (input.value || '').trim().toUpperCase();
-                    wrap.remove();
-                    if (v === 'Y' || v === 'O') {
-                        startHack();
-                    } else {
-                        showPasswordPrompt();
-                    }
-                };
-                input.addEventListener('keydown', e => {
-                    if (e.key === 'Enter') submit();
-                });
-            }
-
-            /* ---- Hack ---- */
-            const DIFF = {
-                facile: 10,
-                normal: 14,
-                difficile: 18,
-                expert: 24
-            };
-            let H = null;
-
-            function stripAccents(s) {
-                try {
-                    return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-                } catch {
-                    return s;
-                }
-            }
-
-            function sourceBank() {
-                const raw = (set.wordMode === 'custom' && set.hackWords && set.hackWords.length) ? set.hackWords : (BANKS[set.wordMode] || BANKS.fallout);
-                return raw.map(w => stripAccents(String(w)).replace(/\s+/g, '').toUpperCase()).filter(w => w.length >= 5 && w.length <= 12);
-            }
-
-            function like(a, b) {
-                let s = 0;
-                for (let i = 0; i < Math.min(a.length, b.length); i++) {
-                    if (a[i] === b[i]) s++;
-                }
-                return s;
-            }
-
-            function overlap(a, b) {
-                const setB = new Set(b.split(''));
-                let c = 0;
-                const seen = new Set();
-                for (const ch of a) {
-                    if (!seen.has(ch) && setB.has(ch)) {
-                        c++;
-                        seen.add(ch);
-                    }
-                }
-                return c;
-            }
-
-            function mostCommonLength(arr) {
-                const freq = {};
-                for (const w of arr) {
-                    const L = w.length;
-                    freq[L] = (freq[L] || 0) + 1;
-                }
-                let bestLen = 6,
-                    bestCt = 0;
-                for (const k in freq) {
-                    const L = +k,
-                        ct = freq[k];
-                    if (ct > bestCt || (ct === bestCt && Math.abs(L - 8) < Math.abs(bestLen - 8))) {
-                        bestCt = ct;
-                        bestLen = L;
-                    }
-                }
-                return bestLen;
-            }
-
-            function buildHackSet() {
-                const src = sourceBank();
-                const need = DIFF[set.hackDifficulty || 'normal'] || 14;
-                if (src.length === 0) {
-                    return {
-                        words: ['TERMINAL', 'SECURITE', 'NUCLEAIRE', 'GENERATEUR'],
-                        solution: 'SECURITE'
-                    };
-                }
-                const targetLen = mostCommonLength(src);
-                let candidates = src.filter(w => w.length === targetLen);
-                if (candidates.length < need) candidates = src.filter(w => Math.abs(w.length - targetLen) <= 1);
-                const solution = candidates[(Math.random() * candidates.length) | 0];
-                const scored = candidates.filter(w => w !== solution).map(w => ({
-                    w,
-                    pos: like(w, solution),
-                    ov: overlap(w, solution)
-                }));
-                scored.sort((a, b) => (b.pos - a.pos) || (b.ov - a.ov));
-                const takeClose = Math.max(1, Math.round((need - 1) * 0.6));
-                const close = scored.slice(0, takeClose);
-                const rest = scored.slice(takeClose).sort(() => Math.random() - 0.5);
-                const mid = rest.slice(0, Math.max(0, (need - 1) - close.length));
-                const words = [solution, ...close.map(x => x.w), ...mid.map(x => x.w)];
-                const used = new Set(words);
-                for (const w of src) {
-                    if (words.length >= need) break;
-                    if (!used.has(w) && Math.abs(w.length - solution.length) <= 1) {
-                        words.push(w);
-                        used.add(w);
-                    }
-                }
-                for (let i = words.length - 1; i > 0; i--) {
-                    const j = (Math.random() * (i + 1)) | 0;
-                    [words[i], words[j]] = [words[j], words[i]];
-                }
-                return {
-                    words,
-                    solution
-                };
-            }
-
-            function buildHackWall(words, cols = 60, rows = 18) {
-                const charset = '!@#$%^&*(){}[]<>?/|\\=+-.;:,_ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-                const mask = Array.from({
-                    length: rows
-                }, () => Array(cols).fill(null));
-
-                function canPlace(r, c, len) {
-                    if (c + len > cols) return false;
-                    for (let i = 0; i < len; i++) {
-                        if (mask[r][c + i]) return false;
-                    }
-                    return true;
-                }
-
-                function placeWord(word) {
-                    let tries = 400;
-                    const len = word.length;
-                    word = word.toUpperCase();
-                    while (tries--) {
-                        const r = (Math.random() * rows) | 0;
-                        const c = (Math.random() * (cols - len)) | 0;
-                        if (canPlace(r, c, len)) {
-                            mask[r][c] = {
-                                word,
-                                len
-                            };
-                            for (let i = 1; i < len; i++) mask[r][c + i] = {
-                                taken: true
-                            };
-                            return true;
-                        }
-                    }
-                    return false;
-                }
-                words.forEach(w => placeWord(w));
-                const lines = [];
-                for (let r = 0; r < rows; r++) {
-                    let line = '';
-                    for (let c = 0; c < cols; c++) {
-                        const cell = mask[r][c];
-                        if (cell && cell.word) {
-                            line += `<button class="w" data-w="${cell.word}" type="button">${cell.word}</button>`;
-                            c += cell.len - 1;
-                        } else if (cell && cell.taken) {
-                            continue;
-                        } else {
-                            const ch = charset[(Math.random() * charset.length) | 0];
-                            line += `<span class="c">${ch}</span>`;
-                        }
-                    }
-                    lines.push(line);
-                }
-                return lines.join('\n');
-            }
-
-            function likePercent(a, b) {
-                const score = like(a, b);
-                return Math.round((score / Math.max(a.length, b.length)) * 100);
-            }
-
-            function randomGarble(len) {
-                const chars = '!@#$%^&*(){}[]<>?/|\\=+-.;:,_';
-                let s = '';
-                for (let i = 0; i < len; i++) {
-                    s += chars[(Math.random() * chars.length) | 0];
-                }
-                return s;
-            }
-
-            function glitchWord(el) {
-                if (!set.wordGlitch) return;
-                const original = el.textContent;
-                el.dataset._orig = original;
-                el.textContent = randomGarble(original.length);
-                setTimeout(() => {
-                    el.textContent = original;
-                }, 90);
-            }
-
-            let glitchTimer = null;
-
-            function startWordGlitch() {
-                if (glitchTimer) return;
-                const wall = document.getElementById('hackWall');
-                if (!wall) return;
-                const words = [...wall.querySelectorAll('.w')];
-                words.forEach(w => {
-                    if (!w.dataset.orig) w.dataset.orig = w.textContent;
-                });
-                glitchTimer = setInterval(() => {
-                    const hw = document.getElementById('hackWall');
-                    if (!hw) {
-                        stopWordGlitch();
-                        return;
-                    }
-                    const count = Math.max(1, Math.min(2, Math.round(words.length * 0.03)));
-                    for (let i = 0; i < count; i++) {
-                        const btn = words[(Math.random() * words.length) | 0];
-                        if (!btn) continue;
-                        const orig = btn.dataset.orig || btn.textContent;
-                        btn.textContent = randomGarble(orig.length);
-                        setTimeout(() => {
-                            if (btn && btn.isConnected) btn.textContent = btn.dataset.orig || orig;
-                        }, 110 + ((Math.random() * 110) | 0));
-                    }
-                }, 2000);
-            }
-
-            function stopWordGlitch() {
-                if (glitchTimer) {
-                    clearInterval(glitchTimer);
-                    glitchTimer = null;
-                }
-            }
-
-            function startHack() {
-                print('');
-                print('HACK TERMINAL — ACCRÉDITATION REQUISE');
-                const pack = buildHackSet();
-                const words = pack.words;
-                const solution = pack.solution;
-                const tries = set.hackTries || 4;
-                H = {
-                    solution,
-                    tries,
-                    maxTries: tries,
-                    words
-                };
-                const wall = document.createElement('pre');
-                wall.className = 'hackwall';
-                wall.id = 'hackWall';
-                wall.innerHTML = buildHackWall(words, 60, 18);
-                const triesRow = document.createElement('div');
-                triesRow.className = 'tiny';
-                triesRow.innerHTML = `Tentatives restantes : <span id="hackTries">${H.tries}</span>`;
-                const triesBar = document.createElement('div');
-                triesBar.className = 'triesBar';
-                triesBar.innerHTML = '<div id="triesFill" class="triesFill"></div>';
-                const log = document.createElement('div');
-                log.className = 'tiny';
-                log.id = 'hackLog';
-                log.style.whiteSpace = 'pre-wrap';
-                log.style.minHeight = '3em';
-                log.style.marginTop = '6px';
-                log.textContent = 'Cliquez sur un mot dans la nuée.';
-                el.console.appendChild(wall);
-                el.console.appendChild(triesRow);
-                el.console.appendChild(triesBar);
-                el.console.appendChild(log);
-                el.console.addEventListener('click', onHackClick);
-                if (set.wordGlitch) startWordGlitch();
-                updateTriesUI();
-                scrollToEnd();
-            }
-
-            function onHackClick(e) {
-                const t = e.target;
-                if (!(t instanceof HTMLElement)) return;
-                if (!t.classList.contains('w')) return;
-                if (set.sfx) safePlay(el.sndHover);
-                glitchWord(t);
-                const guess = t.getAttribute('data-w');
-                setTimeout(() => submitHack(guess), set.wordGlitch ? 100 : 0);
-            }
-
-            function updateTriesUI() {
-                const ht = $('#hackTries');
-                const tf = $('#triesFill');
-                if (!H || !ht || !tf) return;
-                ht.textContent = String(H.tries);
-                tf.style.width = Math.max(0, Math.min(100, Math.round((H.tries / H.maxTries) * 100))) + '%';
-            }
-
-            function submitHack(word) {
-                if (!H) return;
-                if (set.sfx) safePlay(el.sndClick);
-                if (word === H.solution) {
-                    if (set.sfx) safePlay(el.sndSuccess);
-                    print('ACCÈS ACCORDÉ');
-                    el.console.removeEventListener('click', onHackClick);
-                    stopWordGlitch();
-                    H = null;
-                    welcome();
-                } else {
-                    H.tries--;
-                    updateTriesUI();
-                    const s = like(word, H.solution);
-                    const p = likePercent(word, H.solution);
-                    const mode = set.likeness || 'both';
-                    let msg = 'ACCÈS REFUSÉ. ';
-                    if (mode === 'score') msg += `RESSEMBLANCE: ${s}/${H.solution.length}`;
-                    else if (mode === 'percent') msg += `RESSEMBLANCE: ${p}%`;
-                    else msg += `RESSEMBLANCE: ${s}/${H.solution.length} (${p}%)`;
-                    const logEl = $('#hackLog');
-                    if (logEl) logEl.textContent = msg;
-                    if (set.sfx) safePlay(el.sndFail);
-                    if (H.tries <= 0) {
-                        state.lockout = true;
-                        save(KSTATE, state);
-                        print('Terminal verrouillé. Accès MJ requis.');
-                        el.console.removeEventListener('click', onHackClick);
-                        stopWordGlitch();
-                        showAdminHint();
-                    }
-                }
-            }
-
-            function showAdminHint() {
-                print('> Utilisez le menu MJ (☰) pour débloquer.');
-            }
-
-            /* ---- Pages ---- */
-            let diagRunning = false; // 1 seul diagnostic à la fois
-            function welcome() {
-                print('');
-                typeLines([
-                    'ACCÈS ACCORDÉ',
-                    'Bienvenue — unité SEC-48-DSBNK',
-                    'Chargement du menu................. OK',
-                    '',
-                    'Ouverture de la session...'
-                ], 16, () => {
-                    drawMainMenu();
-                });
-            }
-
-            function drawMainMenu() {
-                el.console.textContent = '';
-                print((data.title || '') + '\n' + (data.subtitle || ''));
-                print('');
-                const items = (Array.isArray(data.menus) ? data.menus : []).filter(m => m && m.enabled !== false);
-                if (items.length === 0) {
-                    print('Aucun menu actif. Ouvrez le panneau MJ (☰) pour en ajouter.');
-                    return;
-                }
-                const ul = document.createElement('div');
-                items.forEach((it, idx) => {
-                    const num = String(idx + 1);
-                    const d = document.createElement('div');
-                    d.innerHTML = `<span class="mlink" data-k="${num}">${esc(it.label||('Entrée '+num))}</span>`;
-                    ul.appendChild(d);
-                });
-                el.console.appendChild(ul);
-                print('\nCliquez un menu ou tapez 1-' + items.length + ' et Entrée.');
-                ul.addEventListener('click', (e) => {
-                    const s = e.target;
-                    if (!(s instanceof HTMLElement)) return;
-                    const k = s.getAttribute('data-k');
-                    const idx = (+k || 0) - 1;
-                    const it = items[idx];
-                    if (it) {
-                        routeMenu(it);
-                    }
-                });
-                const wrap = document.createElement('div');
-                wrap.className = 'prompt';
-                wrap.innerHTML = '> ';
-                const input = document.createElement('input');
-                input.size = 2;
-                Object.assign(input.style, {
-                    background: 'transparent',
-                    color: 'var(--g)',
-                    border: 'none',
-                    outline: 'none',
-                    font: 'inherit'
-                });
-                wrap.appendChild(input);
-                el.console.appendChild(wrap);
-                input.focus();
-                scrollToEnd();
-                input.addEventListener('keydown', e => {
-                    if (e.key === 'Enter') {
-                        const v = (input.value || '').trim();
-                        wrap.remove();
-                        const n = parseInt(v, 10);
-                        if (!isNaN(n) && n >= 1 && n <= items.length) {
-                            routeMenu(items[n - 1]);
-                        } else {
-                            print('Commande inconnue.');
-                            drawMainMenu();
-                        }
-                    }
-                });
-            }
-
-            function backToMenu() {
-                print('\n(Entrée pour revenir au menu)');
-                const wrap = document.createElement('div');
-                wrap.className = 'prompt';
-                wrap.innerHTML = '> ';
-                const input = document.createElement('input');
-                input.size = 1;
-                Object.assign(input.style, {
-                    background: 'transparent',
-                    color: 'var(--g)',
-                    border: 'none',
-                    outline: 'none',
-                    font: 'inherit'
-                });
-                wrap.appendChild(input);
-                el.console.appendChild(wrap);
-                input.focus();
-                scrollToEnd();
-                input.addEventListener('keydown', e => {
-                    if (e.key === 'Enter') {
-                        wrap.remove();
-                        drawMainMenu();
-                    }
-                });
-            }
-
-            function routeMenu(it) {
-                const a = it.action;
-                if (a === 'logs') return viewLogs();
-                if (a === 'memos') return viewMemos();
-                if (a === 'door') return viewDoor();
-                if (a === 'about') return viewAbout();
-                if (a === 'page') return openMenuPages(it);
-                viewAbout();
-            }
-
-            function openMenuPages(menu) {
-                const ids = Array.isArray(menu.pages) ? menu.pages.filter(Boolean) : (menu.pageId ? [menu.pageId] : []);
-                if (ids.length <= 1) return viewPage(ids[0]);
-                return viewPageList(menu, ids);
-            }
-
-            function viewPageList(menu, ids) {
-                el.console.textContent = (menu.label || 'PAGES') + '\n';
-                const list = document.createElement('div');
-                ids.forEach((id, i) => {
-                    const p = (data.pages || {})[id] || {
-                        title: id,
-                        body: ''
-                    };
-                    const line = document.createElement('div');
-                    line.innerHTML = `<span class="mlink" data-k="${i+1}">${esc(String(i+1)+') '+(p.title||id))}</span>`;
-                    list.appendChild(line);
-                });
-                el.console.appendChild(list);
-                print('\nChoisissez une page (numéro) et Entrée, ou cliquez.');
-                const wrap = document.createElement('div');
-                wrap.className = 'prompt';
-                wrap.innerHTML = '> ';
-                const input = document.createElement('input');
-                input.size = 2;
-                Object.assign(input.style, {
-                    background: 'transparent',
-                    color: 'var(--g)',
-                    border: 'none',
-                    outline: 'none',
-                    font: 'inherit'
-                });
-                wrap.appendChild(input);
-                el.console.appendChild(wrap);
-                input.focus();
-                scrollToEnd();
-
-                const nav = (n) => {
-                    const idx = n - 1;
-                    if (idx >= 0 && idx < ids.length) viewPage(ids[idx]);
-                    else {
-                        print('Commande inconnue.');
-                        viewPageList(menu, ids);
-                    }
-                };
-
-                input.addEventListener('keydown', e => {
-                    if (e.key === 'Enter') {
-                        const v = (input.value || '').trim();
-                        wrap.remove();
-                        const n = parseInt(v, 10);
-                        if (!isNaN(n)) nav(n);
-                    }
-                });
-                list.addEventListener('click', e => {
-                    const t = e.target;
-                    if (!(t instanceof HTMLElement)) return;
-                    const k = t.getAttribute('data-k');
-                    if (k) nav(parseInt(k, 10));
-                });
-            }
-
-            function viewLogs() {
-                el.console.textContent = 'JOURNAUX:\n';
-                const arr = Array.isArray(data.logs) && data.logs.length ? data.logs : [];
-                arr.forEach(l => print(l));
-                backToMenu();
-            }
-
-            function viewMemos() {
-                el.console.textContent = 'MÉMOS:\n';
-                const arr = Array.isArray(data.memos) && data.memos.length ? data.memos : [];
-                arr.forEach(l => print(l));
-                backToMenu();
-            }
-
-            function viewAbout() {
-                el.console.textContent = 'À PROPOS / SYSTÈME\n';
-                print('SYSTÈME : TERMLINK v2.3');
-                print('UNITÉ : SEC-48-DSBNK');
-                print('EMPLACEMENT : Banque de Dustown, Accès sous-sol');
-                print('BUILD : 2077-10-17');
-                backToMenu();
-            }
-
-            function viewPage(id) {
-                const p = (data.pages || {})[id || ''] || {
-                    title: 'PAGE',
-                    body: '(vide)'
-                };
-                el.console.textContent = (p.title || 'PAGE') + '\n';
-                (String(p.body || '').split('\n')).forEach(l => print(l));
-                backToMenu();
-            }
-
-            function viewDoor() {
-                el.console.textContent = 'CONTRÔLE PORTE ABRI 48\n';
-                const status = el.statDoor.textContent || data.statDoor || 'SCELLÉE';
-                print('Statut actuel : ' + status);
-                const menu = document.createElement('div');
-                menu.innerHTML = `<div><span class="mlink" data-a="open">1) OUVRIR</span></div>
-                    <div><span class="mlink" data-a="seal">2) SCELLER</span></div>
-                    <div><span class="mlink" data-a="diag">3) DIAGNOSTIC</span></div>`;
-                el.console.appendChild(menu);
-                scrollToEnd();
-                menu.addEventListener('click', (e) => {
-                    const s = e.target;
-                    if (!(s instanceof HTMLElement)) return;
-                    const a = s.getAttribute('data-a');
-                    if (a === 'open') {
-                        data.statDoor = 'OUVERTE';
-                        data.statPower = 'ONLINE';
-                        save(KDATA, data);
-                        el.statDoor.textContent = data.statDoor;
-                        el.statPower.textContent = data.statPower;
-                        print('Porte : OUVERTE');
-                        backToMenu();
-                    } else if (a === 'seal') {
-                        data.statDoor = 'SCELLÉE';
-                        data.statPower = 'STANDBY';
-                        save(KDATA, data);
-                        el.statDoor.textContent = data.statDoor;
-                        el.statPower.textContent = data.statPower;
-                        print('Porte : SCELLÉE');
-                        backToMenu();
-                    } else if (a === 'diag') {
-                        if (!diagRunning) doorDiag();
-                    }
-                });
-                print('\nTapez 1-3 et Entrée ou cliquez.');
-                const wrap = document.createElement('div');
-                wrap.className = 'prompt';
-                wrap.innerHTML = '> ';
-                const input = document.createElement('input');
-                input.size = 1;
-                Object.assign(input.style, {
-                    background: 'transparent',
-                    color: 'var(--g)',
-                    border: 'none',
-                    outline: 'none',
-                    font: 'inherit'
-                });
-                wrap.appendChild(input);
-                el.console.appendChild(wrap);
-                input.focus();
-                scrollToEnd();
-                input.addEventListener('keydown', e => {
-                    if (e.key === 'Enter') {
-                        const v = (input.value || '').trim();
-                        wrap.remove();
-                        if (v === '1') {
-                            data.statDoor = 'OUVERTE';
-                            data.statPower = 'ONLINE';
-                            save(KDATA, data);
-                            el.statDoor.textContent = data.statDoor;
-                            el.statPower.textContent = data.statPower;
-                            print('Porte : OUVERTE');
-                            backToMenu();
-                        } else if (v === '2') {
-                            data.statDoor = 'SCELLÉE';
-                            data.statPower = 'STANDBY';
-                            save(KDATA, data);
-                            el.statDoor.textContent = data.statDoor;
-                            el.statPower.textContent = data.statPower;
-                            print('Porte : SCELLÉE');
-                            backToMenu();
-                        } else if (v === '3') {
-                            if (!diagRunning) doorDiag();
-                        } else {
-                            print('Commande inconnue.');
-                            viewDoor();
-                        }
-                    }
-                });
-            }
-
-            function doorDiag() {
-                if (diagRunning) return; // <- ignore les relances
-                diagRunning = true;
-
-                print('');
-                const outLines = [
-                    'LANCEMENT DES TESTS...',
-                    'ALIM EXTERNE : FLUCTUANTE',
-                    'HYDRAULIQUES : OK',
-                    'JOINTS : OK',
-                    'VERROUS : OK',
-                    'PLATEFORME : OBSTRUCTION PARTIELLE DÉTECTÉE',
-                    'CONSEIL : DÉGAGER LES DALLES AVANT OUVERTURE'
-                ];
-                typeLines(outLines, 22, () => {
-                    diagRunning = false; // libère le verrou quand fini
-                    backToMenu();
-                });
-            }
-
-            /* ---- Panneau MJ (avec prompt) + WYSIWYG ---- */
-            let editorInstance = null;
-
-            function openAdmin(){
-  try{
-    // Si aucun mot de passe MJ n'est défini, on ouvre directement
-    if(!String(set.adminPwd || '').length){
-      renderAdmin();
-      const panel = el?.adminPanel || document.getElementById('adminPanel');
-      if(panel){
-        panel.classList.remove('active');
-        try{ if(typeof setupTabs4==='function'){ setupTabs4('hack'); } }catch(_){}
-        panel.classList.add('active');
-      }
-      return;
-    }
-    // Sinon on demande le mot de passe
-    const v = prompt((typeof t==='function')?t('admin.passwordPrompt'):'Mot de passe MJ :');
-    if (v === null) return;
-    if (v === String(set.adminPwd || '')){
-      renderAdmin();
-      const panel = el?.adminPanel || document.getElementById('adminPanel');
-      if(panel){
-        panel.classList.remove('active');
-        try{ if(typeof setupTabs4==='function'){ setupTabs4('hack'); } }catch(_){}
-        panel.classList.add('active');
-      }
-    } else {
-      alert((typeof t==='function')?t('admin.badPassword'):'Mot de passe incorrect.');
-    }
-  }catch(e){
-    try{ console.error('openAdmin error:', e); }catch(_){}
-  }
-}
-            function setupTabs4(defaultTab) {
-                const panel = document.getElementById('adminPanel');
-                if (!panel) return;
-
-                // --- repères de colonnes / sections
-                const two = panel.querySelector('.two');
-                const colLeft = two ? two.firstElementChild : null; // réglages
-                const colRight = two ? two.lastElementChild : null; // import/export
-                const headings = Array.from(panel.querySelectorAll('.h'));
-                const hGeneral = headings.find(h => /réglages\s*g(é|e)n(é|e)raux/i.test(h.textContent || ''));
-                const hIO = headings.find(h => /import\s*\/\s*export/i.test(h.textContent || ''));
-                const wiz = document.getElementById('wizRoot');
-
-                // récupérer les éléments "de la section" depuis le titre .h jusqu’au prochain .h
-                function takeRangeFrom(h) {
-                    const out = [];
-                    if (!h) return out;
-                    out.push(h);
-                    let n = h.nextElementSibling;
-                    while (n && !n.classList.contains('h')) {
-                        out.push(n);
-                        n = n.nextElementSibling;
-                    }
-                    return out;
-                }
-                const secGeneralEls = takeRangeFrom(hGeneral);
-                const secIOEls = takeRangeFrom(hIO);
-
-                // --- barre d’onglets (créée une fois)
-                let nav = panel.querySelector('.admin-tabs');
-                if (!nav) {
-                    nav = document.createElement('div');
-                    nav.className = 'admin-tabs';
-                    nav.innerHTML = `
-      <button type="button" class="admin-tab" data-tab="hack">Hack</button>
-      <button type="button" class="admin-tab" data-tab="effects">Effets</button>
-     <button type="button" class="admin-tab" data-tab="admin">Administration</button>
-      <button type="button" class="admin-tab" data-tab="editor">Éditeur</button>
-    `;
-                    const firstH = headings[0];
-                    if (firstH) firstH.parentNode.insertBefore(nav, firstH);
-                }
-
-                // --- mapping : quels IDs montrer dans chaque sous-onglet
-                const MAP = {
-                    hack: [
-                        'setGateOn', 'setGamePwd',
-                        'setHackAtStart', 'setHackThreshold',
-                        'setWordMode', 'customWordsWrap', 'setHackWords',
-                        'setHackDifficulty', 'setHackTries'
-                    ],
-                    effects: [
-                        'setTheme', 'setBootAlways',
-                        'setSfx', 'setGlitch', 'setWordGlitch'
-                    ],
-                    admin: [
-                        'setAdminPwd' // ← Mot de passe MJ ici
-                    ]
-                };
-
-                // --- helpers d’affichage
-                function hideAll() {
-                    if (colLeft) colLeft.hidden = true;
-                    if (colRight) colRight.hidden = true;
-                    secGeneralEls.forEach(el => el.hidden = true);
-                    secIOEls.forEach(el => el.hidden = true);
-                    if (wiz) wiz.hidden = true;
-                }
-
-                function showSettingsSubtab(kind) {
-                    if (!colLeft) return;
-                    colLeft.hidden = false; // on montre la colonne gauche
-                    secGeneralEls.forEach(el => el.hidden = false); // ... mais on masque ses champs inutilement
-                    if (hGeneral) hGeneral.hidden = true; // on ne veut plus voir "Réglages généraux"
-                    // masquer tous les <label> de la section…
-                    Array.from(colLeft.querySelectorAll('label')).forEach(l => l.hidden = true);
-                    // …et ne ré-afficher que les contrôles requis
-                    (MAP[kind] || []).forEach(id => {
-                        const el = panel.querySelector('#' + id);
-                        if (!el) return;
-                        (el.closest('label') || el).hidden = false;
-                    });
-                }
-
-                const LS_KEY = 'ft_admin_tabs4_v1';
-
-                function activate(tab) {
-                    hideAll();
-                    // cache explicitement le titre “Éditeur” quand on n’est pas dans l’onglet
-                    if (tab !== 'editor') {
-                        const hEd = Array.from(panel.querySelectorAll('.h'))
-                            .find(h => /éditeur/i.test(h.textContent || ''));
-                        if (hEd) hEd.hidden = true;
-                    }
-
-                    if (tab === 'hack') showSettingsSubtab('hack');
-                    else if (tab === 'effects') showSettingsSubtab('effects');
-                    else if (tab === 'admin') {
-                        // Colonne gauche : ne montrer que "Mot de passe MJ"
-                        showSettingsSubtab('admin');
-
-                        // Colonne droite : tout le bloc Import/Export + Rebasculer/Débloquer visibles
-                        if (colRight) {
-                            colRight.hidden = false;
-                            secIOEls.forEach(el => el.hidden = false);
-
-                            const lockRow = panel.querySelector('#lockNow')?.closest('.mj-actions');
-                            if (lockRow) lockRow.hidden = false;
-                            const unlockRow = panel.querySelector('#unlockTerminal')?.closest('.mj-actions');
-                            if (unlockRow) unlockRow.hidden = false;
-                        }
-                    } else if (tab === 'editor') {
-                        if (wiz) wiz.hidden = false;
-                    }
-
-                    nav.querySelectorAll('.admin-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
-                    try {
-                        localStorage.setItem(LS_KEY, tab);
-                    } catch {}
-                }
-
-                // événements onglets
-                nav.addEventListener('click', e => {
-                    const b = e.target.closest('.admin-tab');
-                    if (!b) return;
-                    activate(b.dataset.tab);
-                });
-                nav.addEventListener('keydown', e => {
-                    if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
-                    e.preventDefault();
-                    const all = Array.from(nav.children);
-                    const cur = all.findIndex(b => b.classList.contains('active'));
-                    const next = e.key === 'ArrowRight' ? (cur + 1) % all.length : (cur - 1 + all.length) % all.length;
-                    activate(all[next].dataset.tab);
-                    all[next].focus();
-                });
-
-                const allowed = ['hack', 'effects', 'admin', 'editor'];
-
-                const saved = localStorage.getItem(LS_KEY);
-                const initial = (defaultTab && allowed.includes(defaultTab)) ?
-                    defaultTab // on force l’onglet demandé
-                    :
-                    (allowed.includes(saved) ? saved : 'hack'); // sinon on reprend le dernier ou 'hack'
-                activate(initial);
-
-            }
-
-            function renderAdmin() {
-                try {
-                    $('#setTheme').value = set.theme || 'green';
-                    $('#setGateOn').value = String(!!set.gateOn);
-                    $('#setGamePwd').value = set.gamePwd || '';
-                    $('#setAdminPwd').value = set.adminPwd || '';
-                    $('#setHackAtStart').value = String(!!set.hackAtStart);
-                    $('#setHackThreshold').value = set.hackThreshold || 3;
-                    $('#setBootAlways').value = String(!!set.bootAlways);
-                    $('#setHackDifficulty').value = set.hackDifficulty || 'normal';
-                    $('#setHackTries').value = set.hackTries || 4;
-                    $('#setSfx').value = String(!!set.sfx);
-                    $('#setGlitch').value = set.glitch || false; // autorise true/false, coercition contrôlée
-                    // --- Build dynamique des options depuis BANKS ---
-                    (function() {
-                        const sel = document.getElementById('setWordMode');
-                        sel.innerHTML = ''; // reset pour éviter doublons si HTML contient déjà des <option>
-
-                        const labels = {
-                            fallout: 'Pré-définie (Fallout)',
-                            securite: 'Sécurité',
-                            informatique: 'Informatique',
-                            industriel: 'Industriel',
-                            militaire: 'Militaire',
-                            medical: 'Médical',
-                            general: 'Général',
-                            custom: 'Personnalisée (ci-dessous)'
-                        };
-
-                        // injecte toutes les banques connues
-                        Object.keys(BANKS).forEach(k => {
-                            const opt = document.createElement('option');
-                            opt.value = k;
-                            opt.textContent = labels[k] || k;
-                            sel.appendChild(opt);
-                        });
-
-                        // et l’option "custom" en dernier
-                        const optC = document.createElement('option');
-                        optC.value = 'custom';
-                        optC.textContent = labels.custom;
-                        sel.appendChild(optC);
-
-                        // sélection courante (fallback sur fallout)
-                        const cur = (set.wordMode && (BANKS[set.wordMode] || set.wordMode === 'custom')) ? set.wordMode : 'fallout';
-                        sel.value = cur;
-                    })();
-
-                    // valeur du textarea (liste custom)
-                    $('#setHackWords').value = (Array.isArray(set.hackWords) ? set.hackWords : []).join('\n');
-
-                    // toggle affichage zone custom
-                    function toggleCustomWords() {
-                        const wrap = document.getElementById('customWordsWrap');
-                        wrap.style.display = (document.getElementById('setWordMode').value === 'custom') ? 'block' : 'none';
-                    }
-                    document.getElementById('setWordMode').addEventListener('change', toggleCustomWords);
-                    toggleCustomWords();
-
-                    const root = document.getElementById('wizRoot');
-                    if (root) {
-                        root.innerHTML = '';
-
-                        // garde-fous + résolution explicite du global
-                        const MJ = (window && window.MJEditor) || (globalThis && globalThis.MJEditor);
-                        if (!MJ) {
-                            throw new Error('MJEditor non chargé — vérifie le 1er <script> ou une erreur de console avant.');
-                        }
-
-                        editorInstance = MJ.init(root, data, {
-                            onChange: (d) => {
-                                data = d;
-                                save(KDATA, d);
-                                renderHeader();
-                            },
-                            onSave: (d) => {
-                                data = d;
-                                save(KDATA, d);
-                                renderHeader();
-                                alert('Contenu enregistré.');
-                            }
-                        });
-                    }
-
-                } catch (e) {
-                    console.error('renderAdmin error:', e);
-                    alert('Erreur panneau MJ : ' + e.message);
-                }
-            }
-
-            function closeAdmin(){
-  el.adminPanel.classList.remove('active');
-}
-
-            document.addEventListener('keydown', (e) => {
-                if ((e.ctrlKey || e.metaKey) && (e.key.toLowerCase() === 'm')) {
-                    e.preventDefault();
-                    openAdmin();
-                }
-            });
-            el.adminToggle.addEventListener('click', openAdmin);
-            document.getElementById('closeAdmin').addEventListener('click', closeAdmin);
-            document.addEventListener('keydown', e => {
-                if (e.key === 'Escape' && el.adminPanel.classList.contains('active')) closeAdmin();
-            });
-
-            /* ---- Sauvegardes & actions panneau ---- */
-            document.getElementById('saveSettings').addEventListener('click', () => {
-                // Réglages existants
-                set.theme = document.getElementById('setTheme').value || 'green';
-                set.gateOn = (document.getElementById('setGateOn').value === 'true');
-                set.gamePwd = document.getElementById('setGamePwd').value || set.gamePwd;
-                set.adminPwd = document.getElementById('setAdminPwd').value || set.adminPwd;
-                set.hackAtStart = (document.getElementById('setHackAtStart').value === 'true');
-                set.hackThreshold = Math.max(1, parseInt(document.getElementById('setHackThreshold').value || '3'));
-                set.bootAlways = (document.getElementById('setBootAlways').value === 'true');
-                set.hackDifficulty = document.getElementById('setHackDifficulty').value || 'normal';
-                set.hackTries = Math.max(1, parseInt(document.getElementById('setHackTries').value || '4'));
-                set.sfx = (document.getElementById('setSfx').value === 'true');
-                set.glitch = (document.getElementById('setGlitch').value === 'true');
-                set.wordGlitch = (document.getElementById('setWordGlitch').value === 'true');
-
-                // >>> AJOUTS : banque de mots du hack <<<
-                set.wordMode = document.getElementById('setWordMode').value; // 'fallout' ou 'custom'
-
-                if (set.wordMode === 'custom') {
-                    const raw = document.getElementById('setHackWords').value || '';
-                    set.hackWords = raw
-                        .split(/\r?\n/)
-                        .map(s => s.trim())
-                        .filter(Boolean);
-                } else {
-                    set.hackWords = [];
-                }
-                // >>> FIN AJOUTS <<<
-
-                save(KSET, set);
-                renderHeader();
-                alert('Réglages enregistrés.');
-            });
-
-            document.getElementById('lockNow').addEventListener('click', () => {
-                state.lockout = false;
-                state.wrong = 0;
-                save(KSTATE, state);
-                closeAdmin();
-                boot();
-            });
-            document.getElementById('unlockTerminal').addEventListener('click', () => {
-                state.lockout = false;
-                state.wrong = 0;
-                save(KSTATE, state);
-                alert('Terminal débloqué.');
-            });
-
-            document.getElementById('btnExport').addEventListener('click', () => {
-                const payload = {
-                    data,
-                    settings: set,
-                    state
-                };
-                const blob = new Blob([JSON.stringify(payload, null, 2)], {
-                    type: 'application/json'
-                });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'terminal_v5_allinone.json';
-                document.body.appendChild(a);
-                a.click();
-                a.remove();
-                URL.revokeObjectURL(url);
-            });
-            document.getElementById('fileImport').addEventListener('change', (e) => {
-                const f = e.target.files && e.target.files[0];
-                if (!f) return;
-                const r = new FileReader();
-                r.onload = () => {
-                    try {
-                        const o = JSON.parse(String(r.result));
-                        if (o.data) data = o.data;
-                        if (o.settings) set = o.settings;
-                        if (o.state) state = o.state;
-                        save(KDATA, data);
-                        save(KSET, set);
-                        save(KSTATE, state);
-                        renderHeader();
-                        alert('Import réussi.');
-                    } catch {
-                        alert('Fichier invalide.');
-                    }
-                };
-                r.readAsText(f);
-            });
-
-            /* ---- Lancement ---- */
-            renderHeader();
-            boot();
-        })();
-        const FT_VERSION = 'V5.0.0';
-try { console.info('[Terminal Fallout] %s prêt.', FT_VERSION); } catch {}
-
-// Masquer le bouton MJ si l'URL n'a pas ?mj=1 (lien public)
-(function(){
-  try{
-    const isMJ = new URLSearchParams(location.search).get('mj') === '1';
-    var btn = document.getElementById('adminToggle') || (typeof el!=='undefined' && el.adminToggle);
-    if(btn && btn.style){ btn.style.display = ''; }
-  }catch(_){}
-})();
-
-</script>
+    <!-- AUDIO CORRIGÉ & FIABILISÉ -->
+    <audio id="s_click" preload="auto" src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg"></audio>
+    <audio id="s_boot" preload="auto" src="https://actions.google.com/sounds/v1/science_fiction/scifi_beep_electric.ogg"></audio>
+    <audio id="s_ok" preload="auto" src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"></audio>
+    <audio id="s_err" preload="auto" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
+    
+    <!-- NOUVEAU : SON FRAPPE (BOUTON CASSETTE) -->
+    <audio id="s_type" preload="auto" src="https://actions.google.com/sounds/v1/foley/cassette_tape_button.ogg"></audio>
+    
+    <!-- NOUVEAU : SON DOSSIER (BOOT) -->
+    <audio id="s_folder" preload="auto" src="https://actions.google.com/sounds/v1/science_fiction/scifi_beep_electric.ogg"></audio>
 
 <script>
-// I18N minimal FR/EN
-var I18N = {
-  fr: {
-    "panel.title": "Panneau MJ — V5.1",
-    "effects.language": "Langue",
-    "admin.passwordPrompt": "Mot de passe MJ :",
-    "admin.badPassword": "Mot de passe incorrect."
-  },
-  en: {
-    "panel.title": "GM Panel — V5.1",
-    "effects.language": "Language",
-    "admin.passwordPrompt": "GM password:",
-    "admin.badPassword": "Wrong password."
-  }
-};
-function t(key){
-  try{
-    var L = (typeof set!=='undefined' && set.lang) ? set.lang : 'fr';
-    return (I18N[L] && I18N[L][key]) || (I18N.fr[key] || key);
-  }catch(_){ return key; }
-}
-function applyLanguage(){
-  try{
-    document.querySelectorAll('[data-i18n]').forEach(function(el){
-      var k = el.getAttribute('data-i18n');
-      if(k) el.textContent = t(k);
-    });
-  }catch(_){}
-}
-// Bind after admin renders, so #setLang exists
-(function(){
-  try{
-    var _ra = window.renderAdmin;
-    if(typeof _ra === 'function'){
-      window.renderAdmin = function(){
-        var r = _ra.apply(this, arguments);
-        try{
-          var sel = document.getElementById('setLang');
-          if(sel){
-            sel.value = (typeof set!=='undefined' && set.lang) ? set.lang : 'fr';
-            sel.onchange = function(){
-              try{
-                if(typeof set!=='undefined'){ set.lang = sel.value; }
-                try{ localStorage.setItem('ft_settings_inline_v10', JSON.stringify(set)); }catch(_){}
-                applyLanguage();
-                try{ if(typeof renderHeader==='function'){ renderHeader(); } }catch(_){}
-              }catch(_){}
-            };
-          }
-          applyLanguage();
-        }catch(_){}
-        return r;
-      };
-    }
-    // Also apply on DOM ready
-    if(document.readyState !== 'loading'){ applyLanguage(); }
-    else document.addEventListener('DOMContentLoaded', applyLanguage);
-  }
-  catch(_){ }
-})();
-</script>
-
-<script>
-// === Content translations for default dataset ===
-var DATA_I18N = {
-  fr: {
-    title: "ROBCO INDUSTRIES™ TERMLINK",
-    subtitle: "BANQUE DE DUSTOWN — TERMINAL SÉCURITÉ #48",
-    banner: ["███ ROBCO INDUSTRIES (TM) ███","TERMLINK PROTOCOL v2.3","PROPERTY OF DUSTOWN BANKING CORP."],
-    help: ["• Cliquez un menu pour naviguer.","• En cas d’échecs répétés : hack.","• MJ → Import/Export pour sauvegarder."],
-    statPower: "STANDBY",
-    statDoor: "SCELLÉE",
-    menusByAction: {
-      logs: "➤ CONSULTER LES JOURNAUX",
-      memos: "➤ MÉMOS DE LA DIRECTION",
-      door:  "➤ CONTRÔLE PORTE ABRI 48",
-      about: "➤ À PROPOS / SYSTÈME"
-    },
-    logs: [
-      "- 2077-10-20 : Équipe de nuit : 3 échecs de badge aux guichets. Ticket maintenance ouvert.",
-      "- 2077-10-22 : Livraison : 12 caisses de billets pré-guerre vers Archive B. Signature : C. Holden.",
-      "- 2077-10-23 : Exercice d’évac annulé. Route d’abri mise à jour vers SOUS-NIVEAU 48."
+/* --- DONNÉES INTÉGRÉES (SECURE-TERMLINK v34) --- */
+const DEF = {
+    machine: "ROBCO INDUSTRIES™ SECURE-TERMLINK", 
+    user: "OFFICIER SÉCURITÉ", 
+    theme: "green", 
+    pwd: "SECURE48", 
+    gate: true, 
+    hasDoor: true, 
+    doorState: "SCELLÉE", 
+    power: "OK", 
+    hackAtStart: false, 
+    hackTries: 3, 
+    hackDifficulty: "medium", 
+    wordMode: "securite", 
+    sfx: true,          
+    glitch: true,       
+    bootAlways: false,  
+    customWords: [],    
+    root: [
+        { "id": "folder_rapports", "label": "➤ RAPPORTS DE SÉCURITÉ", "type": "folder", "content": [
+            { "id": "page_sec1", "label": "Rapport #1 (Périmètre)", "type": "file", "content": "01 novembre 2077 : Test de remise en ligne des barrières périmétriques. OK.\n\n05 novembre 2077 : Alarme intrusion secteur C — neutralisée. Compte-rendu envoyé au Central.\n\n12 novembre 2077 : Anomalie détection radiologique, zone isolée, personnel évacué." },
+            { "id": "page_sec2", "label": "Rapport #2 (Audit)", "type": "file", "content": "18 novembre 2077 : Vérification intégrité coffre-fort nucléaire : SCELLÉ.\n\n20 novembre 2077 : Audit interne — caméras 3/4 hors-ligne, intervention planifiée.\n\n25 novembre 2077 : Exercice d'évacuation — personnel : 98% conformité." }
+        ]},
+        { "id": "folder_logs", "label": "➤ INCIDENTS & LOGS", "type": "folder", "content": [
+            { "id": "log_1", "label": "Connexion 25/11", "type": "file", "content": "Dernière connexion : 25 novembre 2077." },
+            { "id": "log_2", "label": "Scan Périmètre", "type": "file", "content": "Scan périmètre : OK. Caméras en secteur A et B synchronisées." },
+            { "id": "log_3", "label": "Anomalie Sas 4", "type": "file", "content": "Note : traces de suie présentes près du sas 4 — inspection recommandée." }
+        ]},
+        { "id": "folder_proto", "label": "➤ PROTOCOLES D'ACCÈS", "type": "folder", "content": [
+            { "id": "page_proto", "label": "Niveaux d'accréditation", "type": "file", "content": "- Niveau 1 : Personnel autorisé — badge vert requis.\n- Niveau 2 : Accès restreint — badge rouge + biométrie.\n- Niveau 3 : Accès coffre — badge admin + clé physique + double authentification.\n\nEn cas de perte de badge, alerter Central Sécurité immédiatement." }
+        ]},
+        { "id": "folder_memos", "label": "➤ MÉMOS SÉCURITÉ", "type": "folder", "content": [
+            { "id": "memo_1", "label": "Rappel Confinement", "type": "file", "content": "Rappel : maintenir les protocoles de confinement après toute intrusion." },
+            { "id": "memo_2", "label": "Ordre Prioritaire", "type": "file", "content": "Ordre : Priorité aux zones contenant matériel sensible — rapporter toute activité suspecte." },
+            { "id": "memo_3", "label": "Instruction Radio", "type": "file", "content": "Instruction : Ne partagez jamais les codes d'accès par radio non sécurisée." }
+        ]},
+        { "id": "sys_about", "label": "➤ À PROPOS / SYSTÈME", "type": "file", "content": "SECURE-TERMLINK v3.1\nUNITÉ : SEC-ROBCO-01\nLOCALISATION : Installation de Sécurité RobCo — Secteur Alpha" }
     ],
-    memos: [
-      "- Note au personnel : Ne rien stocker près du monte-charge de l’abri. Dalles dégagées.",
-      "- Plainte client : Multiples faux billets — vérifier la trieuse lundi."
+    help: [
+        "• Priorité : protection des actifs et du personnel.",
+        "• En cas d'alerte nucléaire, suivre le protocole SEC-RED-01.",
+        "• Signalez toute anomalie au bureau Central Sécurité (extension 00-SEC)."
     ]
-  },
-  en: {
-    title: "ROBCO INDUSTRIES™ TERMLINK",
-    subtitle: "DUSTOWN BANK — SECURITY TERMINAL #48",
-    banner: ["███ ROBCO INDUSTRIES (TM) ███","TERMLINK PROTOCOL v2.3","PROPERTY OF DUSTOWN BANKING CORP."],
-    help: ["• Click a menu to navigate.","• After repeated failures: hack.","• GM → Import/Export to save."],
-    statPower: "STANDBY",
-    statDoor: "SEALED",
-    menusByAction: {
-      logs: "➤ VIEW LOGS",
-      memos: "➤ MANAGEMENT MEMOS",
-      door:  "➤ VAULT 48 DOOR CONTROL",
-      about: "➤ ABOUT / SYSTEM"
-    },
-    logs: [
-      "- 2077-10-20: Night shift: 3 badge failures at tellers. Maintenance ticket opened.",
-      "- 2077-10-22: Delivery: 12 crates of pre-war bills to Archive B. Signed: C. Holden.",
-      "- 2077-10-23: Evac drill canceled. Vault route updated to SUB-LEVEL 48."
-    ],
-    memos: [
-      "- Staff note: Do not store anything near the vault lift. Keep tiles clear.",
-      "- Customer complaint: Multiple counterfeit bills — check the sorter on Monday."
-    ]
-  }
 };
 
-function translateAllContent(lang){
-  try{
-    // 1) UI strings via data-i18n
-    applyLanguage();
-    // 2) Data object (only for known default fields). We do not touch custom pages.
-    var pack = DATA_I18N[lang] || DATA_I18N.fr;
-    // Top-level texts
-    if (pack.title)    data.title = pack.title;
-    if (pack.subtitle) data.subtitle = pack.subtitle;
-    if (pack.banner)   data.banner  = pack.banner.slice();
-    if (pack.help)     data.help    = pack.help.slice();
-    if (pack.statPower) data.statPower = pack.statPower;
-    if (pack.statDoor)  data.statDoor  = pack.statDoor;
+const BANKS = {
+    securite: ['COFFRE', 'CADENAS', 'ALARME', 'INTRUSION', 'VERROU', 'PROTECTION', 'PROTOCOLE', 'CLEF', 'SURVEILLER', 'AGREMENT', 'ACCES', 'BADGE', 'CAPTEURS', 'CAMERAS', 'GARDE', 'PATROUILLE', 'QUARANTAINE', 'PAREFEU', 'CHIFFRAGE', 'DECHIFFRE', 'AUTHENTIF', 'ACCEPTION', 'LISTEBLANC', 'LISTENOIR', 'BLOCAGE', 'LASER', 'TURRET', 'DEFENSE', 'SHIELD', 'ARMOR', 'SENTRY', 'ROBOT', 'PROTECT', 'DETECT', 'ALERT', 'DANGER', 'BREACH', 'ENTRY', 'EXIT', 'DENIED', 'GRANT', 'TOKEN', 'KEYCARD', 'CIPHER', 'CODE', 'PASSWD', 'LOGIN', 'AUTH'],
+    standard: ['SYSTEME', 'MEMOIRE', 'TERMINAL', 'RESEAU', 'PAQUET', 'PROGRAMME', 'FICHIER', 'DOSSIER', 'REGISTRE', 'KERNEL', 'BOOTSECT', 'FIRMWARE', 'ALGORITHME', 'SOCKET', 'SERIALISE', 'COMPILATEUR', 'PROCESSUS', 'THREAD', 'BUFFER', 'PILOTES', 'ETATMAJOR', 'USINE', 'METRO', 'ARCHIVE', 'BUREAUX', 'COULOIRS', 'ASCENSEUR', 'PLATEAU', 'CABLES', 'GENIE', 'SCANNER', 'BATTERIE', 'ECRAN', 'CLAVIER', 'MONITEUR', 'ANTENNE', 'RECEPTEUR', 'EMETTEUR', 'SIGNAL', 'RELAIS', 'PONTAGE', 'BATIMENT', 'ENTREPOT', 'STATION', 'DONNEES', 'MEMORY', 'SOURCE', 'OUTPUT', 'INPUT', 'SEARCH', 'FOUND', 'ERROR', 'STATUS', 'RETRY', 'ABORT', 'IGNORE', 'FAIL', 'PASS', 'CHECK', 'VERIFY', 'SECURE', 'LOCKED', 'OPEN', 'CLOSE', 'PRINT', 'SCAN', 'READ', 'WRITE'],
+    medical: ['DOCTEUR', 'SERINGUE', 'VACCIN', 'VIRUS', 'SOINS', 'HOPITAL', 'PANSEMENT', 'PLASMIDE', 'ANALYSES', 'TRIAGE', 'DIAGNOSE', 'ANTIDOTE', 'CHIRURGIE', 'STIMULANT', 'RADAWAY', 'ANTIRAD', 'PROTHESE', 'GREFFONS', 'STERILISE', 'VENTILATEUR', 'INFIRMIER', 'MALADIE', 'SANG', 'OS', 'PEAU', 'COEUR', 'POUMON', 'CERVEAU', 'NERFS', 'STIMPAK', 'MEDX', 'RADX', 'MENTATS', 'JET', 'BUFFOUT', 'CHEMIE', 'BIOLOGIE', 'GENETIQUE', 'CELLULE', 'ADN', 'RNA', 'MUTATION', 'CANCER', 'SANTE'],
+    militaire: ['SOLDAT', 'CANON', 'ARMEE', 'GUERRE', 'ARSENAL', 'MISSILE', 'CHAR', 'GARNISON', 'CASERNE', 'ORDRE', 'TACTIQUE', 'STRATEGIE', 'COMMANDO', 'ESCADRON', 'ARTILLERIE', 'FUSIL', 'MUNITIONS', 'GILET', 'CASQUE', 'BALISTIQUE', 'OFFICIER', 'CAPITAINE', 'SERGENT', 'GENERAL', 'BASE', 'BUNKER', 'SILO', 'BOMBE', 'NUKE', 'ATOM', 'PISTOLET', 'LASER', 'PLASMA', 'MINIGUN', 'FATMAN', 'POWER', 'ARMOR', 'T51B', 'T60', 'X01', 'ENCLAVE', 'BROTHER', 'SISTER', 'SCRIBE', 'PALADIN', 'KNIGHT'],
+    vault: ['ABRI', 'COGITEUR', 'TERMINAL', 'ROBCO', 'PAROXYSME', 'RADIATION', 'GEIGER', 'NUCLEAIRE', 'ATOMIQUE', 'PLASMA', 'LASER', 'SERVOMOTEUR', 'GENERATEUR', 'SECURITE', 'SERRURE', 'INTRUSION', 'OVERRIDE', 'PROTOCOL', 'ENCLAVE', 'FRATRIE', 'GOULE', 'MUTANT', 'DECHETS', 'RUINES', 'ABRITAGE', 'CRYOGENE', 'EXPERIMENT', 'DIAGNOSTIC', 'REPARATION', 'MAINTENANCE', 'ARCHIVES', 'CONSOLE', 'BUNKER', 'TRAPPE', 'ELEVATEUR', 'MONTECHARGE', 'SERVEUR', 'RESEAU', 'SOUSSOL', 'BANQUIERE', 'DOSSIERS', 'BILLETTERIE', 'FUSIBLES', 'URGENCES', 'ALARME', 'CAMERAS', 'HYDRAULIQUE', 'JOINTURES', 'VERROUS', 'PLATEFORME', 'TECNOLOGIE', 'TEST', 'SUJET', 'HABITANT', 'OVERSEER', 'GUEULE', 'EAU', 'CHIP', 'FILTRE', 'PORTE', 'GEAR', 'SUIT', 'PIPBOY', 'VATS', 'SPECIAL', 'LEVEL', 'PERK', 'SKILL', 'TRAIT', 'BOBBLE', 'HEAD', 'QUARTERS', 'REACTOR', 'ATRIUM', 'CLINIC', 'DINER', 'CLASS'],
+    industriel: ['MOTEUR', 'TURBINE', 'ROUILLE', 'ATELIER', 'USINAGE', 'METALLURGIE', 'CONVOYEUR', 'HYDRAULIQUE', 'POMPAGE', 'VANNES', 'MANOMETRE', 'SOUDEUSE', 'RIVETAGE', 'PALAN', 'GRUEPORT', 'PLANCHERS', 'ECHAFAUDS', 'CINTREUSE', 'FONDERIE', 'FRAISEUSE']
+};
 
-    // Menus: relabel known actions; keep "page" labels as-is
-    if (Array.isArray(data.menus)){
-      data.menus = data.menus.map(function(m){
-        var out = Object.assign({}, m);
-        if (out && out.action && pack.menusByAction && pack.menusByAction[out.action]){
-          out.label = pack.menusByAction[out.action];
+let DATA = JSON.parse(JSON.stringify(DEF));
+let STATE = { editing: false, view: 'boot', currentFolder: null, path: [], authInput: "", wrongCount: 0 };
+
+window.App = {
+    // FIX RESET 2 : Stocker l'URL d'origine au chargement
+    homeURL: window.location.href,
+
+    init: () => {
+        // ... (init code remains same) ...
+        const d = localStorage.getItem('ft_v34');
+        if(d) {
+            try { DATA = {...DEF, ...JSON.parse(d)}; } catch(e){ console.error(e); }
         }
-        return out;
-      });
-    }
+        if(DATA.sfx === undefined) DATA.sfx = true;
+        window.App.sync();
+    },
+    save: () => { localStorage.setItem('ft_v34', JSON.stringify(DATA)); window.App.sync(); },
+    sync: () => {
+        const safeSet = (id, v) => { const el=document.getElementById(id); if(el) el.innerText=v; };
+        document.documentElement.setAttribute('data-theme', DATA.theme);
+        
+        // Glitch Logic
+        document.body.classList.toggle('glitch-active', DATA.glitch !== false);
 
-    // Logs & memos: overwrite only if currently equal to the opposite language defaults or to the starting defaults
-    function arrEq(a,b){
-      if(!Array.isArray(a)||!Array.isArray(b)||a.length!==b.length) return false;
-      for(var i=0;i<a.length;i++) if(String(a[i])!==String(b[i])) return false;
-      return true;
-    }
-    var other = (lang==='en')?DATA_I18N.fr:DATA_I18N.en;
-    if (arrEq(data.logs, other.logs) || arrEq(data.logs, DATA_I18N.fr.logs) || arrEq(data.logs, DATA_I18N.en.logs)){
-      data.logs = pack.logs.slice();
-    }
-    if (arrEq(data.memos, other.memos) || arrEq(data.memos, DATA_I18N.fr.memos) || arrEq(data.memos, DATA_I18N.en.memos)){
-      data.memos = pack.memos.slice();
-    }
+        let hue = 85; if(DATA.theme === 'amber') hue = 40; if(DATA.theme === 'blue') hue = 180;
+        const filter = `brightness(0) saturate(100%) invert(57%) sepia(97%) saturate(3600%) hue-rotate(${hue}deg) brightness(118%) contrast(119%) drop-shadow(0 0 5px var(--g))`;
+        document.querySelectorAll('img').forEach(img => img.style.filter = filter);
+        
+        const banner = document.getElementById('banner');
+        banner.innerText = DATA.machine;
+        banner.contentEditable = STATE.editing;
+        banner.style.borderBottom = STATE.editing ? "1px dashed var(--g)" : "none";
+        banner.onblur = () => { DATA.machine = banner.innerText; window.App.save(); };
 
-    // Save + re-render
-    try{ localStorage.setItem('ft_data_inline_v10', JSON.stringify(data)); }catch(_){}
-    try{ localStorage.setItem('ft_settings_inline_v10', JSON.stringify(set)); }catch(_){}
-    if (typeof renderHeader==='function') renderHeader();
-  }catch(e){
-    try{ console.error('translateAllContent error:', e); }catch(_){}
-  }
-}
-</script>
-<script>
-(function(){
-  function ensureAdminLangButtons(){
-    try{
-      var adminTab = document.getElementById('tab-admin') || document.querySelector('.mj-tabpage#tab-admin') || document.querySelector('#adminPanel .mj-tabpage:nth-child(3)');
-      if(!adminTab) return false;
-      if(document.getElementById('langAdminBlock')) return true;
-      var wrap = document.createElement('div');
-      wrap.id = 'langAdminBlock';
-      wrap.innerHTML = '<div class="row"><span class="title">Langue</span><button class="btn" id="btnLangFR">Français</button><button class="btn" id="btnLangEN">English</button></div>';
-      adminTab.appendChild(wrap);
-      var btnFR = document.getElementById('btnLangFR');
-      var btnEN = document.getElementById('btnLangEN');
-      if(btnFR) btnFR.onclick = function(){
-        try{ if(typeof set!=='undefined'){ set.lang='fr'; } localStorage.setItem('ft_settings_inline_v10', JSON.stringify(set)); translateAllContent('fr'); }catch(_){}
-      };
-      if(btnEN) btnEN.onclick = function(){
-        try{ if(typeof set!=='undefined'){ set.lang='en'; } localStorage.setItem('ft_settings_inline_v10', JSON.stringify(set)); translateAllContent('en'); }catch(_){}
-      };
-      return true;
-    }catch(_){ return false; }
-  }
-  // Re-run after each render of admin
-  var _ra = window.renderAdmin;
-  if(typeof _ra === 'function'){
-    window.renderAdmin = function(){
-      var r = _ra.apply(this, arguments);
-      try{ ensureAdminLangButtons(); }catch(_){}
-      return r;
-    };
-  }else{
-    // Fallback: try on DOM ready
-    if(document.readyState!=='loading'){ ensureAdminLangButtons(); }
-    else document.addEventListener('DOMContentLoaded', ensureAdminLangButtons);
-  }
-  // Ensure MJ button opens the panel
-  function bindMJ(){
-    try{
-      var t=document.getElementById('adminToggle');
-      if(t){ t.onclick=function(ev){ try{ev&&ev.preventDefault();}catch(_){ } if(typeof openAdmin==='function') openAdmin(); }; }
-    }catch(_){}
-  }
-  if(document.readyState!=='loading'){ bindMJ(); }
-  else document.addEventListener('DOMContentLoaded', bindMJ);
-}();
-</script>
+        const sub = document.getElementById('pageSub');
+        if(STATE.editing) {
+            sub.innerHTML = `UTILISATEUR : <span id="editUser" style="border-bottom:1px dashed var(--g); cursor:text">${DATA.user}</span>`;
+            const eu = document.getElementById('editUser');
+            eu.contentEditable = true;
+            eu.onblur = () => { DATA.user = eu.innerText; window.App.save(); };
+        } else {
+            sub.innerText = `UTILISATEUR : ${DATA.user}`;
+        }
 
+        const pwr = document.getElementById('statPower');
+        pwr.innerText = DATA.power || "OK"; 
+        pwr.contentEditable = STATE.editing;
+        pwr.style.borderBottom = STATE.editing ? "1px dashed var(--g)" : "none";
+        pwr.onblur = () => { DATA.power = pwr.innerText; window.App.save(); };
 
+        safeSet('doorVal', DATA.doorState);
+        const d = document.getElementById('doorDisplay'); if(d) d.style.display = DATA.hasDoor ? 'flex' : 'none';
 
-<script>
-(function(){
-  function ensureAdminLangDropdown(){
-    try{
-      var panel = document.getElementById('adminPanel');
-      if(!panel) return false;
-      var two = panel.querySelector('.two');
-      var colRight = two ? two.lastElementChild : null;
-      var hIO = Array.from(panel.querySelectorAll('.h')).find(function(h){
-        return /import\s*\/\s*export/i.test(h.textContent||'');
-      });
-      var target = colRight || (hIO && hIO.parentElement) || panel;
-      if(!target) return false;
-      if(document.getElementById('langAdminBlock')) return true;
-      var wrap = document.createElement('div');
-      wrap.id = 'langAdminBlock';
-      wrap.innerHTML = '<div class="row"><label for="adminLangSelect">Langue</label><select id="adminLangSelect"><option value="fr">Français</option><option value="en">English</option></select></div>';
-      target.appendChild(wrap);
-      var sel = document.getElementById('adminLangSelect');
-      if(sel){
-        // init current value
-        try{ sel.value = (typeof set!=='undefined' && set.lang) ? set.lang : 'fr'; }catch(_){ sel.value='fr'; }
-        sel.onchange = function(){
-          try{
-            if(typeof set!=='undefined'){ set.lang = sel.value; }
-            try{ localStorage.setItem('ft_settings_inline_v10', JSON.stringify(set)); }catch(_){}
-            if(typeof translateAllContent==='function') translateAllContent(sel.value);
-            if(typeof applyLanguage==='function') applyLanguage();
-            if(typeof renderHeader==='function') renderHeader();
-          }catch(_){}
-        };
-      }
-      return true;
-    }catch(_){ return false; }
-  }
-  // Hook after each render of admin
-  try{
-    var _ra = window.renderAdmin;
-    if(typeof _ra === 'function'){
-      window.renderAdmin = function(){
-        var r = _ra.apply(this, arguments);
-        try{ ensureAdminLangDropdown(); }catch(_){}
-        try{ relocateSaveButton(); }catch(_){ }
-        try{ relocateSaveButton(); relocateCloseButton(); }catch(_){ }
-        return r;
-      };
-    }else{
-      if(document.readyState!=='loading'){ ensureAdminLangDropdown(); }
-      else document.addEventListener('DOMContentLoaded', ensureAdminLangDropdown);
-    }
-  }catch(_){}
-  // Ensure MJ button opens the panel
-  function bindMJ(){
-    try{
-      var t=document.getElementById('adminToggle');
-      if(t){ t.onclick=function(ev){ try{ev&&ev.preventDefault();}catch(_){ } if(typeof openAdmin==='function') openAdmin(); }; }
-    }catch(_){}
-  }
-  if(document.readyState!=='loading'){ bindMJ(); }
-  else document.addEventListener('DOMContentLoaded', bindMJ);
-})();
-</script>
+        const h = document.getElementById('helpBox');
+        if(h) {
+            h.innerHTML = "";
+            (DATA.help||[]).forEach((txt, i) => {
+                const row = document.createElement('div');
+                row.style.marginBottom = "4px";
+                row.style.display = "flex";
+                row.style.justifyContent = "space-between";
 
+                const span = document.createElement('span');
+                span.innerText = txt;
+                if(STATE.editing) {
+                    span.contentEditable = true;
+                    span.style.borderBottom = "1px dashed var(--line)";
+                    span.style.flex = "1";
+                    span.onblur = () => { DATA.help[i] = span.innerText; window.App.save(); };
 
-<script>
-(function(){
-  function findExistingCloseBtn(){
-    try{
-      var p=document.getElementById('adminPanel'); if(!p) return null;
-      // look for any button that likely closes the panel
-      var cand=[].slice.call(p.querySelectorAll('button, .btn')).filter(function(b){
-        var txt=(b.textContent||'').trim().toLowerCase();
-        var k=b.getAttribute && b.getAttribute('data-i18n');
-        return (k==='btn.close') || /fermer/.test(txt) || /close/.test(txt);
-      });
-      return cand[0]||null;
-    }catch(_){ return null; }
-  }
-  function clickVisibleSaveButtons(){
-    try{
-      var p=document.getElementById('adminPanel'); if(!p) return;
-      var activePage = p.querySelector('.mj-tabpage.active') || p;
-      // Prefer i18n save buttons inside active tab
-      var btns=[].slice.call(activePage.querySelectorAll('button, .btn')).filter(function(b){
-        if(b.closest('#adminFooterBar')) return false;
-        var k=b.getAttribute && b.getAttribute('data-i18n');
-        var txt=(b.textContent||'').trim().toLowerCase();
-        return (k==='btn.save') || txt==='enregistrer' || txt==='save';
-      });
-      if(btns.length){ btns[0].click(); return true; }
-      // Fallback: global handlers
-      var ok=false;
-      try{ if(typeof saveSettings==='function'){ saveSettings(); ok=true; } }catch(_){}
-      try{ if(window.MJEditor && typeof MJEditor.save==='function'){ MJEditor.save(); ok=true; } }catch(_){}
-      return ok;
-    }catch(_){ return false; }
-  }
-  function ensureAdminFooter(){
-    try{
-      var p=document.getElementById('adminPanel'); if(!p) return false;
-      if(document.getElementById('adminFooterBar')) return true;
-      var bar=document.createElement('div');
-      bar.id='adminFooterBar';
-      bar.innerHTML='<div id="adminSaveSlot" style="margin-right:8px"></div><div id="adminCloseSlot"></div>';
-      p.appendChild(bar);
-      // Bind buttons
-      var save=document.getElementById('adminSaveAll');
-      var close=document.getElementById('adminCloseAll');
-      if(save){ save.onclick=function(){ try{ clickVisibleSaveButtons(); }catch(_){ } }; }
-      if(close){
-        close.onclick=function(){
-          try{
-            var b=findExistingCloseBtn();
-            if(b){ b.click(); }
-            else{
-              var panel=document.getElementById('adminPanel');
-              if(panel && panel.classList) panel.classList.remove('active');
+                    const del = document.createElement('span');
+                    del.innerText = "[X]";
+                    del.className = "btn-del";
+                    del.style.marginLeft = "5px";
+                    del.onclick = () => { DATA.help.splice(i, 1); window.App.save(); window.App.sync(); };
+                    row.appendChild(span);
+                    row.appendChild(del);
+                } else {
+                    row.appendChild(span);
+                }
+                h.appendChild(row);
+            });
+
+            if(STATE.editing) {
+                const add = document.createElement('div');
+                add.className = "btn-add";
+                add.style.padding = "4px";
+                add.style.marginTop = "8px";
+                add.innerText = "+ AIDE";
+                add.onclick = () => { DATA.help.push("Nouvelle info..."); window.App.save(); window.App.sync(); };
+                h.appendChild(add);
             }
-          }catch(_){}
-        };
-      }
-      // i18n apply for our buttons if available
-      try{ if(typeof applyLanguage==='function') applyLanguage(); }catch(_){}
-      return true;
-    }catch(_){ return false; }
-  }
+        }
+    },
+    
+    // FIX RESET 3 : Utiliser homeURL pour forcer le retour à l'appli (pas de reload du blob)
+    reset: () => { 
+        if(confirm("Reset total des données ?")) { 
+            localStorage.removeItem('ft_v34'); 
+            window.location.href = window.App.homeURL;
+        } 
+    },
+    forceReload: () => {
+        window.location.href = window.App.homeURL;
+    },
 
-      function relocateCloseButton(){
-        try{
-          var p=document.getElementById('adminPanel'); if(!p) return false;
-          var slot=document.getElementById('adminCloseSlot'); if(!slot) return false;
-          // Cleanup previous
-          while(slot.firstChild) slot.removeChild(slot.firstChild);
-          // Find the existing close button
-          var closeReal=document.getElementById('closeAdmin');
-          if(!closeReal) return false;
-          // Hide the original container row (the block with "Échap = fermer")
-          try{
-            var row=closeReal.closest('div');
-            // The row is inside a wrapper with a <span class="tiny">Échap = fermer</span> above
-            var wrapper = row && row.parentElement;
-            if(wrapper){
-              wrapper.style.display='none';
+    playSound: (id) => { 
+        if(DATA.sfx === false) return; 
+        const s = document.getElementById(id); if(s){s.currentTime=0; s.play().catch(()=>{});} 
+    },
+
+    toggleEdit: () => {
+        STATE.editing = !STATE.editing;
+        document.body.classList.toggle('editing', STATE.editing);
+        window.Admin.close(); window.App.sync(); window.App.render();
+    },
+
+    // --- BOOT ---
+    powerOn: () => {
+        window.App.playSound('s_boot');
+        document.getElementById('bootStart').style.display = 'none';
+        document.getElementById('bootLoad').style.display = 'block';
+        let p = 0; const bar = document.getElementById('bootBar'); const msg = document.getElementById('bootMsg');
+        const steps = [{p:20,t:"BIOS CHECK..."},{p:50,t:"LOADING..."},{p:80,t:"MEMORY OK"},{p:100,t:"STARTING..."}];
+        let i = 0;
+        const next = () => {
+            if(i < steps.length) {
+                bar.style.width = steps[i].p + "%"; msg.innerText = steps[i].t; i++; setTimeout(next, 600);
+            } else {
+                setTimeout(() => {
+                    document.getElementById('bootLayer').style.opacity = 0;
+                    setTimeout(() => {
+                        document.getElementById('bootLayer').style.display = 'none';
+                        document.getElementById('uiLayer').style.opacity = 1;
+                        window.App.bootTextSequence();
+                    }, 1000);
+                }, 500);
             }
-          }catch(_){}
-          // Move the real button
-          slot.appendChild(closeReal);
-          // Ensure visual consistency
-          closeReal.classList.add('btn');
-          closeReal.style.margin='0';
-          return true;
-        }catch(_){ return false; }
-      }
+        }; next();
+    },
 
-      function relocateSaveButton(){
-        try{
-          var p=document.getElementById('adminPanel'); if(!p) return false;
-          var slot=document.getElementById('adminSaveSlot'); if(!slot) return false;
-          // Cleanup any previous moved save button in slot
-          while(slot.firstChild) slot.removeChild(slot.firstChild);
-          // Find active tab page
-          var active=p.querySelector('.mj-tabpage.active')||p;
-          // Look for a button with text "Enregistrer réglages" (FR) or "Save settings" (EN)
-          var candidates=[].slice.call(active.querySelectorAll('button,.btn')).filter(function(b){
-            var txt=(b.textContent||'').trim().toLowerCase();
-            if(b.closest('#adminFooterBar')) return false;
-            return txt.includes('enregistrer réglages') || txt==='/ enregistrer réglages' || txt.includes('save settings');
-          });
-          // Fallbacks: any button with data-i18n="btn.save" inside the active page
-          if(!candidates.length){
-            candidates=[].slice.call(active.querySelectorAll('[data-i18n=\"btn.save\"]'));
-          }
-          if(!candidates.length) return false;
-          var saveBtn=candidates[0];
-          // Move the button into the slot (keeps events)
-          slot.appendChild(saveBtn);
-          // make it primary-ish
-          saveBtn.classList.add('btn','primary');
-          saveBtn.style.minWidth='auto';
-          saveBtn.style.margin='0';
-          return true;
-        }catch(_){ return false; }
-      }
+    checkBoot: () => {
+        const hasBooted = sessionStorage.getItem('ft_boot_once');
+        if(!hasBooted || DATA.bootAlways === true) {
+            sessionStorage.setItem('ft_boot_once', 'true');
+            // Laisser l'écran de boot
+        } else {
+            // Skip boot
+            document.getElementById('bootLayer').style.display = 'none';
+            document.getElementById('uiLayer').style.opacity = 1;
+            if(DATA.gate) window.App.showLogin(); else window.App.goHome();
+        }
+    },
 
-  // Hook renderAdmin to (re)append/footer
-  try{
-    var _ra=window.renderAdmin;
-    if(typeof _ra==='function'){
-      window.renderAdmin=function(){
-        var r=_ra.apply(this, arguments);
-        try{ ensureAdminFooter(); }catch(_){}
-        try{ relocateSaveButton(); }catch(_){ }
-        try{ relocateSaveButton(); relocateCloseButton(); }catch(_){ }
-        return r;
-      };
-    }else{
-      if(document.readyState!=='loading'){ ensureAdminFooter(); }
-      else document.addEventListener('DOMContentLoaded', function(){ ensureAdminFooter(); relocateSaveButton(); relocateCloseButton(); });
+    bootTextSequence: () => {
+        const c = document.getElementById('console'); c.innerHTML = "";
+        window.Util.type(c, "ROBCO INDUSTRIES (TM) TERMLINK PROTOCOL\nCOPYRIGHT 2075-2077 ROBCO INDUSTRIES\n\n-SERVER 6-\n\nCONNEXION EN COURS...", 20, () => {
+             setTimeout(() => { if(DATA.gate) window.App.showLogin(); else window.App.goHome(); }, 1000);
+        });
+    },
+
+    showLogin: () => {
+        STATE.view = 'login'; STATE.authInput = "";
+        const c = document.getElementById('console'); c.innerHTML = "";
+        window.Util.type(c, "\n\nAUTHENTIFICATION REQUISE\n\nVEUILLEZ ENTRER LE MOT DE PASSE :\n", 10, () => {
+            const div = document.createElement('div'); div.className = 'prompt-line';
+            div.innerHTML = `> <span id="authDisplay"></span><span class="caret"></span><input id="realInput" class="hidden-input" autofocus>`;
+            c.appendChild(div);
+            const input = document.getElementById('realInput'); const display = document.getElementById('authDisplay');
+            let showTimeout; input.focus(); c.onclick = () => input.focus();
+            
+            input.oninput = (e) => {
+                window.App.playSound('s_type'); // SON DE FRAPPE (TYPE)
+                const val = input.value.toUpperCase(); input.value = val;
+                let masked = ""; for(let i=0; i<val.length-1; i++) masked += "*"; if(val.length > 0) masked += val.slice(-1);
+                display.innerText = masked;
+                clearTimeout(showTimeout); showTimeout = setTimeout(() => { display.innerText = val.split('').map(()=>'*').join(''); }, 600);
+            };
+            input.onkeydown = (e) => {
+                if(e.key === 'Enter') {
+                    const val = input.value.trim(); input.disabled = true;
+                    // Cheatcode 'H' pour le hack immédiat (si activé)
+                    if(val === 'H' && DATA.hackAtStart) { window.Hack.start(); return; }
+
+                    if(val === (DATA.pwd || '').toUpperCase()) { 
+                        window.App.playSound('s_ok');
+                        window.Util.type(c, "\n\n> ACCÈS AUTORISÉ.\n> INITIALISATION...", 20, () => {
+                            STATE.view = 'main'; setTimeout(() => window.App.goHome(), 1000);
+                        });
+                    } else {
+                        window.App.playSound('s_err');
+                        window.Util.type(c, "\n> ACCÈS REFUSÉ.", 20, () => {
+                            STATE.wrongCount++;
+                            // CORRECTION HACK LOOP (Ne dépend plus de hackAtStart)
+                            if(STATE.wrongCount >= (DATA.hackThreshold || 3)) {
+                                window.Util.type(c, "\n> VIOLATION. INTRUSION ? (O/N)", 20, () => {
+                                    input.value=""; display.innerText=""; input.disabled = false; input.focus();
+                                    input.oninput = null;
+                                    input.onkeydown = (ev) => {
+                                        if(ev.key.toUpperCase() === 'O') window.Hack.start();
+                                        if(ev.key.toUpperCase() === 'N') { STATE.wrongCount=0; window.App.showLogin(); }
+                                    };
+                                });
+                            } else {
+                                setTimeout(window.App.showLogin, 1000);
+                            }
+                        });
+                    }
+                }
+            };
+        });
+    },
+
+    goHome: () => { STATE.view='main'; STATE.currentFolder = DATA.root; STATE.path = [{label: "ACCUEIL", ref: DATA.root}]; window.App.render(); },
+    enterFolder: (item) => { STATE.currentFolder = item.content; STATE.path.push({label: item.label, ref: item.content}); window.App.render(); },
+    goUp: () => { if(STATE.path.length > 1) { STATE.path.pop(); STATE.currentFolder = STATE.path[STATE.path.length-1].ref; window.App.render(); } },
+
+    render: () => {
+        if(STATE.view === 'login' || STATE.view === 'hack') return;
+        STATE.view = 'main';
+        const c = document.getElementById('console'); const title = document.getElementById('pageTitle'); const bread = document.getElementById('breadcrumb');
+        
+        c.style.opacity = 0.5;
+        setTimeout(() => {
+            c.innerHTML = '';
+            if(title) title.innerText = STATE.path[STATE.path.length-1].label.toUpperCase();
+            
+            // Fil d'Ariane cliquable
+            if(bread) {
+                bread.innerHTML = STATE.path.map((item, idx) => {
+                    const separator = idx > 0 ? ' > ' : '';
+                    const link = `<span class="path-segment" onclick="window.App.gotoPathIndex(${idx})">${item.label}</span>`;
+                    return separator + link;
+                }).join('');
+                bread.prepend('[ '); bread.appendChild(document.createTextNode(' ]'));
+            }
+            
+            STATE.currentFolder.forEach((item, i) => {
+                const row = document.createElement('div'); 
+                const typeClass = (item.type === 'folder') ? 'interactive' : 'static';
+                row.className = `mlink ${typeClass}`;
+                
+                const span = document.createElement('span');
+                span.innerText = (item.type === 'folder' ? '>> ' : '') + (item.label || item.content);
+                if(item.type === 'folder') span.style.fontWeight = "bold";
+                span.className = STATE.editing ? 'editable-text' : '';
+                
+                row.appendChild(span); // TEXTE D'ABORD
+
+                if (STATE.editing) {
+                    span.contentEditable = true;
+                    span.style.flexGrow = "1"; // Permet au texte de prendre la place
+                    span.onblur = () => {
+                        item.label = span.innerText.replace('>> ', '');
+                        if(item.type === 'file') item.content = item.label; 
+                        window.App.save();
+                    };
+
+                    // Conteneur pour aligner les boutons à droite
+                    const actions = document.createElement('div');
+                    actions.style.display = 'flex';
+                    actions.style.alignItems = 'center';
+
+                    if(item.type === 'folder') {
+                        const open = document.createElement('span'); 
+                        open.style.cursor='pointer'; 
+                        open.style.color='var(--g)'; 
+                        open.innerText='[OUVRIR]'; 
+                        open.style.marginLeft='10px';
+                        open.onclick = (e) => { e.stopPropagation(); window.App.enterFolder(item); };
+                        actions.appendChild(open);
+                    }
+
+                    const del = document.createElement('span'); 
+                    del.className = 'btn-del edit-btn'; 
+                    del.innerText = "[X]";
+                    del.onclick = (e) => { e.stopPropagation(); window.Direct.deleteItem(i); };
+                    actions.appendChild(del);
+
+                    row.appendChild(actions); // AJOUT DU CONTENEUR ACTIONS
+                } else {
+                    row.onclick = () => { 
+                        if(item.type === 'folder') {
+                            window.App.playSound('s_folder'); 
+                            window.App.enterFolder(item);
+                        }
+                    };
+                }
+                c.appendChild(row);
+            });
+
+            // Affichage Lien Porte (CORRECTIF: Apparaît/Disparaît instantanément quand on ferme le panneau MJ)
+            if (STATE.path.length === 1 && DATA.hasDoor === true) {
+                const d = document.createElement('div'); d.className = 'mlink interactive'; d.innerHTML = `<span>[VERROU] CONTRÔLE PORTE</span>`;
+                d.onclick = () => { window.App.playSound('s_folder'); window.App.showDoor(); }; c.appendChild(d);
+            }
+            c.style.opacity = 1;
+        }, 100);
+    },
+
+    gotoPathIndex: (index) => {
+        if (index < STATE.path.length - 1) {
+            STATE.currentFolder = STATE.path[index].ref;
+            STATE.path = STATE.path.slice(0, index + 1);
+            window.App.render();
+        }
+    },
+
+    showDoor: () => {
+        const c = document.getElementById('console'); document.getElementById('pageTitle').innerText = "SÉCURITÉ";
+        c.innerHTML = `<div style="margin-bottom:20px">STATUT : ${DATA.doorState}</div><div class="mlink interactive" onclick="window.App.setDoor('OUVERTE', ['ENVOI CODE...', 'OUVERTURE'])">OUVRIR</div><div class="mlink interactive" onclick="window.App.setDoor('VERROUILLÉE', ['VERROUILLAGE...', 'CONFIRMATION'])">VERROUILLER</div><div class="mlink interactive" style="margin-top:20px" onclick="window.App.goHome()">< RETOUR</div>`;
+    },
+    setDoor: (s, msgs) => { 
+        DATA.doorState = s; window.App.save(); window.App.playSound('s_ok'); 
+        const c = document.getElementById('console');
+        let i=0; const seq = () => { if(i<msgs.length) { const d=document.createElement('div'); d.innerText="> "+msgs[i]; c.prepend(d); i++; setTimeout(seq, 500); } else { window.App.sync(); } }; seq();
+    },
+
+    // CORRECTIF EXPORT : Méthode standard HTML5 sans target_blank (évite blocage popup)
+    exportData: () => { 
+        const blob = new Blob([JSON.stringify(DATA, null, 2)], {type:'application/json'}); 
+        // Créer l'URL blob
+        const url = URL.createObjectURL(blob); 
+        // Créer l'élément de lien
+        const a = document.createElement('a'); 
+        a.style.display = 'none'; // Le cacher
+        a.href = url; 
+        a.download = 'terminal_backup.json'; 
+        // Ajouter au corps, cliquer, puis supprimer
+        document.body.appendChild(a); 
+        a.click(); 
+        document.body.removeChild(a);
+        // Nettoyer l'URL après un délai
+        setTimeout(() => URL.revokeObjectURL(url), 2000); 
+    },
+    importData: (input) => { const f = input.files[0]; if(!f) return; const r = new FileReader(); r.onload = (e) => { try { DATA = {...DEF, ...JSON.parse(e.target.result)}; window.App.save(); window.App.forceReload(); } catch(err){alert("Erreur JSON");} }; r.readAsText(f); },
+    hardReset: () => { if(confirm("Tout effacer ?")) { localStorage.removeItem('ft_v34'); window.App.forceReload(); } }
+};
+
+window.Direct = {
+    addItem: (type) => {
+        const list = STATE.currentFolder;
+        if (type === 'folder') list.push({ id: Date.now(), label: "NOUVEAU DOSSIER", type: 'folder', content: [] });
+        else list.push({ id: Date.now(), label: "Nouvelle ligne...", type: 'file' });
+        window.App.save(); window.App.render();
+    },
+    deleteItem: (index) => { 
+        STATE.currentFolder.splice(index, 1); window.App.save(); window.App.render(); 
     }
-  }catch(_){}
-})();
-</script>
+};
 
+window.Util = {
+    type: (el, txt, spd, cb) => {
+        let i=0; 
+        const t=setInterval(()=>{ 
+            if(i<txt.length){
+                el.insertAdjacentText('beforeend',txt[i]); 
+                window.App.playSound('s_type'); 
+                i++; 
+                const mc = document.getElementById('mainCard'); if(mc) mc.scrollTop = mc.scrollHeight;
+            } else {
+                clearInterval(t); if(cb)cb();
+            } 
+        }, spd);
+    }
+};
+
+window.Admin = {
+    open: () => { if(DATA.adminPwd) { const p = prompt("MDP MJ:"); if(p!==DATA.adminPwd) return alert("Refusé"); } document.getElementById('adminPanel').classList.add('active'); window.Admin.populate(); },
+    close: () => { 
+        document.getElementById('adminPanel').classList.remove('active'); 
+        window.App.save(); 
+        window.App.sync(); 
+        window.App.render(); // FIX REFRESH PORTE
+    },
+    tab: (id) => {
+        document.querySelectorAll('.admin-content').forEach(e=>e.classList.remove('active'));
+        document.getElementById('tab-'+id).classList.add('active');
+        document.querySelectorAll('.tab-btn').forEach(e=>e.classList.remove('active'));
+        event.target.classList.add('active');
+    },
+    populate: () => {
+        const getVal = (id, val) => { const el=document.getElementById(id); if(el) el.value = val; };
+        // setMachineName and setUserName removed
+        getVal('setDoorState', DATA.doorState);
+        getVal('setHasDoor', DATA.hasDoor.toString()); getVal('setGamePwd', DATA.pwd); getVal('setGateOn', DATA.gate.toString());
+        getVal('setHackAtStart', DATA.hackAtStart.toString()); getVal('setTheme', DATA.theme); getVal('setAdminPwd', DATA.adminPwd||"");
+        getVal('setHackTries', DATA.hackTries); getVal('setWordMode', DATA.wordMode || 'securite');
+        
+        getVal('setSfx', (DATA.sfx !== false).toString());
+        getVal('setGlitch', (DATA.glitch !== false).toString());
+        getVal('setBootAlways', (DATA.bootAlways === true).toString());
+        
+        const customArea = document.getElementById('setCustomWords');
+        if(customArea) customArea.value = (DATA.customWords || []).join('\n');
+        window.Admin.checkCustom();
+    },
+    checkCustom: () => {
+        const mode = document.getElementById('setWordMode').value;
+        document.getElementById('customWordsBlock').style.display = (mode === 'custom') ? 'block' : 'none';
+    },
+    save: () => {
+        const getVal = (id) => document.getElementById(id)?.value;
+        // DATA.machine and DATA.user NOT updated here anymore
+        DATA.hasDoor = (getVal('setHasDoor') === 'true'); DATA.doorState = getVal('setStatDoorInit');
+        DATA.gate = (getVal('setGateOn') === 'true'); DATA.pwd = getVal('setGamePwd');
+        DATA.hackAtStart = (getVal('setHackAtStart') === 'true'); 
+        DATA.hackTries = parseInt(getVal('setHackTries')); DATA.theme = getVal('setTheme'); DATA.adminPwd = getVal('setAdminPwd');
+        DATA.wordMode = getVal('setWordMode');
+        
+        DATA.sfx = (getVal('setSfx') === 'true');
+        DATA.glitch = (getVal('setGlitch') === 'true');
+        DATA.bootAlways = (getVal('setBootAlways') === 'true');
+        
+        if(DATA.wordMode === 'custom') {
+            const raw = document.getElementById('setCustomWords').value;
+            DATA.customWords = raw.split('\n').map(s => s.trim().toUpperCase()).filter(s => s.length > 0);
+        }
+
+        window.App.save(); alert("Sauvegardé"); window.Admin.close();
+    },
+};
+
+document.getElementById('setWordMode').addEventListener('change', window.Admin.checkCustom);
+
+window.Hack = {
+    start: () => {
+        STATE.view = 'hack';
+        const c = document.getElementById('console'); document.getElementById('pageTitle').innerText = "DÉCHIFFRAGE"; c.innerHTML = "";
+        
+        const mode = DATA.wordMode || 'securite';
+        
+        let pool = [];
+        if (mode === 'custom' && DATA.customWords && DATA.customWords.length > 5) {
+            pool = DATA.customWords;
+        } else {
+            pool = BANKS[mode] || BANKS.standard;
+        }
+        
+        const seedWord = pool[Math.floor(Math.random() * pool.length)];
+        const targetLen = seedWord.length;
+        
+        let validPool = pool.filter(w => w.length === targetLen);
+        if (validPool.length < 12) validPool = pool.filter(w => Math.abs(w.length - targetLen) < 2);
+        if (validPool.length < 12) validPool = pool; 
+
+        let words = []; 
+        for(let k=0; k<12; k++) {
+            words.push(validPool[Math.floor(Math.random()*validPool.length)]);
+        }
+        
+        const solution = words[Math.floor(Math.random() * words.length)]; 
+        let tries = DATA.hackTries || 4;
+        
+        const header = document.createElement('div');
+        header.className = "hack-header";
+        header.id = "tryHeader";
+        let bars = ""; for(let i=0; i<tries; i++) bars += " ■";
+        header.innerHTML = `TENTATIVES : <span id="tryBars">${bars}</span>`;
+        c.appendChild(header);
+        
+        const wall = document.createElement('div'); wall.className = 'hack-container';
+        let col1Html = "", col2Html = "";
+        let addr = 0xF900;
+        const chars = "!@#$%^&*()_+{}[]<>";
+        
+        const buildRow = (w) => {
+            let hex = `0x${addr.toString(16).toUpperCase()}`;
+            addr += 12;
+            let str = "";
+            
+            if(w) {
+                const maxStart = 12 - w.length;
+                const start = Math.floor(Math.random() * (maxStart + 1));
+                for(let k=0; k<12; k++) {
+                    if(k === start) {
+                        str += `<span class="hack-word" onclick="window.Hack.check('${w}', '${solution}', this)">${w}</span>`;
+                        k += w.length - 1;
+                    } else {
+                        str += `<span class="hack-char">${chars[Math.floor(Math.random()*chars.length)]}</span>`;
+                    }
+                }
+            } else {
+                for(let k=0; k<12; k++) str += `<span class="hack-char">${chars[Math.floor(Math.random()*chars.length)]}</span>`;
+            }
+            return `<div class="hack-block"><span class="hack-hex">${hex}</span> <span class="hack-chars">${str}</span></div>`;
+        };
+        
+        let slots = Array(32).fill(null);
+        let indices = [];
+        while(indices.length < 12) {
+            let r = Math.floor(Math.random() * 32);
+            if(!indices.includes(r)) indices.push(r);
+        }
+        indices.forEach((idx, i) => slots[idx] = words[i]);
+        
+        for(let i=0; i<16; i++) col1Html += buildRow(slots[i]);
+        for(let i=16; i<32; i++) col2Html += buildRow(slots[i]);
+        
+        wall.innerHTML = `<div style="flex:1">${col1Html}</div><div style="flex:1">${col2Html}</div>`;
+        c.appendChild(wall);
+        
+        const log = document.createElement('div'); log.id = 'hackLog'; log.className = "hack-log";
+        c.appendChild(log);
+        
+        window.Hack.state = { solution, tries };
+        
+        window.Hack.interval = setInterval(() => {
+             const els = document.querySelectorAll('.hack-char');
+             if(els.length > 0) {
+                 const el = els[Math.floor(Math.random()*els.length)];
+                 el.innerText = chars[Math.floor(Math.random()*chars.length)];
+                 el.classList.add('glitch');
+                 setTimeout(()=>el.classList.remove('glitch'), 100);
+             }
+        }, 50);
+    },
+    check: (word, sol, el) => {
+        const s = window.Hack.state; if (s.tries <= 0) return;
+        const log = document.getElementById('hackLog');
+        
+        if(el) el.classList.add('used');
+
+        if (word === sol) {
+            clearInterval(window.Hack.interval);
+            window.App.playSound('s_ok'); 
+            log.innerHTML = `<div class="log-entry">> MOT DE PASSE CORRECT.</div><div class="log-entry">> DÉCRYPTAGE EN COURS...</div><div class="log-entry">> ACCÈS AUTORISÉ.</div>`;
+            setTimeout(() => { STATE.view='main'; window.App.goHome(); }, 2000);
+        } else {
+            s.tries--; window.App.playSound('s_err'); 
+            
+            let bars = ""; for(let i=0; i<s.tries; i++) bars += " ■";
+            document.getElementById('tryBars').innerText = bars;
+            
+            let matchBars = ""; 
+            for(let i=0; i<sol.length; i++) {
+                if (word[i] === sol[i]) {
+                    matchBars += `<span class="res-square" style="color:var(--g)">■</span>`; 
+                } else {
+                    matchBars += `<span class="res-square" style="color:var(--err); opacity:0.8">■</span>`; 
+                }
+            }
+
+            log.innerHTML += `<div class="log-entry">> ${word} : ÉCHEC.</div>`;
+            log.innerHTML += `<div class="log-entry">> RESSEMBLANCE : ${matchBars}</div>`;
+            log.innerHTML += `<div class="log-entry">> RESTANT : ${s.tries}</div>`;
+            log.scrollTop = log.scrollHeight;
+
+            if (s.tries <= 0) { 
+                clearInterval(window.Hack.interval);
+                log.innerHTML += `<div class="log-entry" style="color:red">!!! TERMINAL VERROUILLÉ !!!</div>`;
+            }
+        }
+    }
+};
+
+window.onload = () => {
+    window.App.init();
+    window.App.checkBoot();
+};
+</script>
 </body>
-
 </html>
