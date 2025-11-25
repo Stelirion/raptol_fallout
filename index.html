@@ -396,6 +396,225 @@ const BANKS = {
 let DATA = JSON.parse(JSON.stringify(DEF));
 let STATE = { editing: false, view: 'boot', currentFolder: null, path: [], authInput: "", wrongCount: 0 };
 
+/* --- ORDONNANCEMENT FIXÉ : UTILITAIRES D'ABORD --- */
+
+window.Util = {
+    type: (el, txt, spd, cb) => {
+        let i=0; 
+        const t=setInterval(()=>{ 
+            if(i<txt.length){
+                el.insertAdjacentText('beforeend',txt[i]); 
+                window.App.playSound('s_type'); 
+                i++; 
+                const mc = document.getElementById('mainCard'); if(mc) mc.scrollTop = mc.scrollHeight;
+            } else {
+                clearInterval(t); if(cb)cb();
+            } 
+        }, spd);
+    }
+};
+
+window.Direct = {
+    addItem: (type) => {
+        const list = STATE.currentFolder;
+        if (type === 'folder') list.push({ id: Date.now(), label: "NOUVEAU DOSSIER", type: 'folder', content: [] });
+        else list.push({ id: Date.now(), label: "Nouvelle ligne...", type: 'file' });
+        window.App.save(); window.App.render();
+    },
+    deleteItem: (index) => { 
+        STATE.currentFolder.splice(index, 1); window.App.save(); window.App.render(); 
+    }
+};
+
+window.Admin = {
+    open: () => { if(DATA.adminPwd) { const p = prompt("MDP MJ:"); if(p!==DATA.adminPwd) return alert("Refusé"); } document.getElementById('adminPanel').classList.add('active'); window.Admin.populate(); },
+    close: () => { 
+        document.getElementById('adminPanel').classList.remove('active'); 
+        window.App.save(); 
+        window.App.sync(); 
+        window.App.render(); // FIX REFRESH PORTE
+    },
+    tab: (id) => {
+        document.querySelectorAll('.admin-content').forEach(e=>e.classList.remove('active'));
+        document.getElementById('tab-'+id).classList.add('active');
+        document.querySelectorAll('.tab-btn').forEach(e=>e.classList.remove('active'));
+        event.target.classList.add('active');
+    },
+    populate: () => {
+        const getVal = (id, val) => { const el=document.getElementById(id); if(el) el.value = val; };
+        // setMachineName and setUserName removed
+        getVal('setDoorState', DATA.doorState);
+        getVal('setHasDoor', DATA.hasDoor.toString()); getVal('setGamePwd', DATA.pwd); getVal('setGateOn', DATA.gate.toString());
+        getVal('setHackAtStart', DATA.hackAtStart.toString()); getVal('setTheme', DATA.theme); getVal('setAdminPwd', DATA.adminPwd||"");
+        getVal('setHackTries', DATA.hackTries); getVal('setWordMode', DATA.wordMode || 'securite');
+        
+        getVal('setSfx', (DATA.sfx !== false).toString());
+        getVal('setGlitch', (DATA.glitch !== false).toString());
+        getVal('setBootAlways', (DATA.bootAlways === true).toString());
+        
+        const customArea = document.getElementById('setCustomWords');
+        if(customArea) customArea.value = (DATA.customWords || []).join('\n');
+        window.Admin.checkCustom();
+    },
+    checkCustom: () => {
+        const mode = document.getElementById('setWordMode').value;
+        document.getElementById('customWordsBlock').style.display = (mode === 'custom') ? 'block' : 'none';
+    },
+    save: () => {
+        const getVal = (id) => document.getElementById(id)?.value;
+        // DATA.machine and DATA.user NOT updated here anymore
+        DATA.hasDoor = (getVal('setHasDoor') === 'true'); DATA.doorState = getVal('setStatDoorInit');
+        DATA.gate = (getVal('setGateOn') === 'true'); DATA.pwd = getVal('setGamePwd');
+        DATA.hackAtStart = (getVal('setHackAtStart') === 'true'); 
+        DATA.hackTries = parseInt(getVal('setHackTries')); DATA.theme = getVal('setTheme'); DATA.adminPwd = getVal('setAdminPwd');
+        DATA.wordMode = getVal('setWordMode');
+        
+        DATA.sfx = (getVal('setSfx') === 'true');
+        DATA.glitch = (getVal('setGlitch') === 'true');
+        DATA.bootAlways = (getVal('setBootAlways') === 'true');
+        
+        if(DATA.wordMode === 'custom') {
+            const raw = document.getElementById('setCustomWords').value;
+            DATA.customWords = raw.split('\n').map(s => s.trim().toUpperCase()).filter(s => s.length > 0);
+        }
+
+        window.App.save(); alert("Sauvegardé"); window.Admin.close();
+    },
+};
+
+window.Hack = {
+    start: () => {
+        STATE.view = 'hack';
+        const c = document.getElementById('console'); document.getElementById('pageTitle').innerText = "DÉCHIFFRAGE"; c.innerHTML = "";
+        
+        const mode = DATA.wordMode || 'securite';
+        
+        let pool = [];
+        if (mode === 'custom' && DATA.customWords && DATA.customWords.length > 5) {
+            pool = DATA.customWords;
+        } else {
+            pool = BANKS[mode] || BANKS.standard;
+        }
+        
+        const seedWord = pool[Math.floor(Math.random() * pool.length)];
+        const targetLen = seedWord.length;
+        
+        let validPool = pool.filter(w => w.length === targetLen);
+        if (validPool.length < 12) validPool = pool.filter(w => Math.abs(w.length - targetLen) < 2);
+        if (validPool.length < 12) validPool = pool; 
+
+        let words = []; 
+        for(let k=0; k<12; k++) {
+            words.push(validPool[Math.floor(Math.random()*validPool.length)]);
+        }
+        
+        const solution = words[Math.floor(Math.random() * words.length)]; 
+        let tries = DATA.hackTries || 4;
+        
+        const header = document.createElement('div');
+        header.className = "hack-header";
+        header.id = "tryHeader";
+        let bars = ""; for(let i=0; i<tries; i++) bars += " ■";
+        header.innerHTML = `TENTATIVES : <span id="tryBars">${bars}</span>`;
+        c.appendChild(header);
+        
+        const wall = document.createElement('div'); wall.className = 'hack-container';
+        let col1Html = "", col2Html = "";
+        let addr = 0xF900;
+        const chars = "!@#$%^&*()_+{}[]<>";
+        
+        const buildRow = (w) => {
+            let hex = `0x${addr.toString(16).toUpperCase()}`;
+            addr += 12;
+            let str = "";
+            
+            if(w) {
+                const maxStart = 12 - w.length;
+                const start = Math.floor(Math.random() * (maxStart + 1));
+                for(let k=0; k<12; k++) {
+                    if(k === start) {
+                        str += `<span class="hack-word" onclick="window.Hack.check('${w}', '${solution}', this)">${w}</span>`;
+                        k += w.length - 1;
+                    } else {
+                        str += `<span class="hack-char">${chars[Math.floor(Math.random()*chars.length)]}</span>`;
+                    }
+                }
+            } else {
+                for(let k=0; k<12; k++) str += `<span class="hack-char">${chars[Math.floor(Math.random()*chars.length)]}</span>`;
+            }
+            return `<div class="hack-block"><span class="hack-hex">${hex}</span> <span class="hack-chars">${str}</span></div>`;
+        };
+        
+        let slots = Array(32).fill(null);
+        let indices = [];
+        while(indices.length < 12) {
+            let r = Math.floor(Math.random() * 32);
+            if(!indices.includes(r)) indices.push(r);
+        }
+        indices.forEach((idx, i) => slots[idx] = words[i]);
+        
+        for(let i=0; i<16; i++) col1Html += buildRow(slots[i]);
+        for(let i=16; i<32; i++) col2Html += buildRow(slots[i]);
+        
+        wall.innerHTML = `<div style="flex:1">${col1Html}</div><div style="flex:1">${col2Html}</div>`;
+        c.appendChild(wall);
+        
+        const log = document.createElement('div'); log.id = 'hackLog'; log.className = "hack-log";
+        c.appendChild(log);
+        
+        window.Hack.state = { solution, tries };
+        
+        window.Hack.interval = setInterval(() => {
+             const els = document.querySelectorAll('.hack-char');
+             if(els.length > 0) {
+                 const el = els[Math.floor(Math.random()*els.length)];
+                 el.innerText = chars[Math.floor(Math.random()*chars.length)];
+                 el.classList.add('glitch');
+                 setTimeout(()=>el.classList.remove('glitch'), 100);
+             }
+        }, 50);
+    },
+    check: (word, sol, el) => {
+        const s = window.Hack.state; if (s.tries <= 0) return;
+        const log = document.getElementById('hackLog');
+        
+        if(el) el.classList.add('used');
+
+        if (word === sol) {
+            clearInterval(window.Hack.interval);
+            window.App.playSound('s_ok'); 
+            log.innerHTML = `<div class="log-entry">> MOT DE PASSE CORRECT.</div><div class="log-entry">> DÉCRYPTAGE EN COURS...</div><div class="log-entry">> ACCÈS AUTORISÉ.</div>`;
+            setTimeout(() => { STATE.view='main'; window.App.goHome(); }, 2000);
+        } else {
+            s.tries--; window.App.playSound('s_err'); 
+            
+            let bars = ""; for(let i=0; i<s.tries; i++) bars += " ■";
+            document.getElementById('tryBars').innerText = bars;
+            
+            let matchBars = ""; 
+            for(let i=0; i<sol.length; i++) {
+                if (word[i] === sol[i]) {
+                    matchBars += `<span class="res-square" style="color:var(--g)">■</span>`; 
+                } else {
+                    matchBars += `<span class="res-square" style="color:var(--err); opacity:0.8">■</span>`; 
+                }
+            }
+
+            log.innerHTML += `<div class="log-entry">> ${word} : ÉCHEC.</div>`;
+            log.innerHTML += `<div class="log-entry">> RESSEMBLANCE : ${matchBars}</div>`;
+            log.innerHTML += `<div class="log-entry">> RESTANT : ${s.tries}</div>`;
+            log.scrollTop = log.scrollHeight;
+
+            if (s.tries <= 0) { 
+                clearInterval(window.Hack.interval);
+                log.innerHTML += `<div class="log-entry" style="color:red">!!! TERMINAL VERROUILLÉ !!!</div>`;
+            }
+        }
+    }
+};
+
+/* --- APPLICATION PRINCIPALE (DÉFINIE APRÈS LES OUTILS) --- */
+
 window.App = {
     // FIX RESET 2 : Stocker l'URL d'origine au chargement
     homeURL: window.location.href,
