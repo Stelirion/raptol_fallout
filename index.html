@@ -3,18 +3,17 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-    <title>Terminal Fallout — V7 (Final)</title>
+    <title>Terminal Superviseur — Vault-Tec V7</title>
     <style>
-        /* --- VARIABLES V5.3 --- */
+        /* --- CONFIGURATION VISUELLE --- */
         :root {
             --g: #7CFF91; --g-rgb: 124, 255, 145;
             --y: #FFD75E; --line: rgba(var(--g-rgb), .18);
-            --err: #ff4444; /* Couleur erreur */
+            --err: #ff4444;
         }
         html[data-theme="amber"] { --g: #FFC107; --g-rgb: 255, 193, 7; --y: #FFE08A; --line: rgba(var(--g-rgb), .16); }
         html[data-theme="blue"] { --g: #39c0ff; --g-rgb: 57, 192, 255; --line: rgba(var(--g-rgb), .18); }
 
-        /* TAILLE STANDARD (16px) */
         html, body { height: 100%; margin: 0; background: #0b0b0b; color: var(--g); font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace; overflow: hidden; user-select: none; font-size: 16px; }
         * { scrollbar-width: none; box-sizing: border-box; }
         ::-webkit-scrollbar { display: none; }
@@ -28,7 +27,6 @@
         }
         body.editing .crt { border: 2px dashed #ff4444; }
 
-        /* Scanlines & Glow */
         body.glitch-active .crt::before {
             content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 10;
             background: radial-gradient(ellipse at center, rgba(var(--g-rgb), .14) 0%, rgba(var(--g-rgb), .08) 35%, rgba(0,0,0,0) 70%);
@@ -77,9 +75,7 @@
         /* --- CONSOLE --- */
         #console { white-space: pre-wrap; line-height: 1.4; flex: 1; font-family: monospace; }
         
-        /* --- PASSWORD --- */
         .prompt-line { display: flex; align-items: center; font-size: 1.1rem; margin-top: 5px; }
-        /* Animation Blink */
         .caret { display: inline-block; width: 10px; height: 1.2em; background: var(--g); animation: blink 1s infinite; margin-left: 2px; }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
         
@@ -90,19 +86,14 @@
             padding: 4px 8px; margin-bottom: 2px; border-radius: 3px; 
             display: flex; justify-content: space-between; align-items: center;
         }
-        /* Hover actif uniquement sur les éléments interactifs (dossiers/boutons) */
         .mlink.interactive { cursor: pointer; }
         .mlink.interactive:hover { background: rgba(var(--g-rgb), .12); color: #fff; }
-        
-        /* Les notes (fichiers) ne changent pas au survol */
         .mlink.static { cursor: default; }
         
-        /* Fil d'Ariane Cliquable */
         #breadcrumb { opacity: 0.6; margin-bottom: 10px; padding-bottom: 5px; border-bottom: 1px dashed var(--line); display: block; }
         #breadcrumb .path-segment { cursor: pointer; margin-right: 5px; padding: 2px 4px; border-radius: 2px; }
         #breadcrumb .path-segment:hover { background: rgba(var(--g-rgb), 0.1); opacity: 1.0; }
         #breadcrumb .separator { opacity: 0.8; }
-
 
         /* --- EDIT CONTROLS --- */
         body:not(.editing) .edit-btn { display: none !important; }
@@ -137,7 +128,6 @@
         .btn:hover { background: var(--g); color: #000; }
         .two { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         
-        /* ALIGNEMENT BOUTONS SYSTÈME (SAME SIZE) */
         .sys-actions { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 15px; }
         .sys-actions .btn, .sys-actions label { 
             width: 100%; height: 100%; box-sizing: border-box; 
@@ -149,12 +139,10 @@
         .sys-actions .btn-reset { border-color: #f55; color: #f55; }
         .sys-actions .btn-reset:hover { background: #f55; color: #000; }
 
-        /* --- HACK GAME (TAILLE STANDARD) --- */
+        /* --- HACK GAME --- */
         .hack-container { 
             font-family: monospace; 
-            font-size: 15px; /* TAILLE STANDARD */
-            line-height: 1.4; 
-            letter-spacing: 2px;
+            font-size: 15px; line-height: 1.4; letter-spacing: 2px;
             display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 5px; 
         }
         .hack-block { display: flex; gap: 10px; }
@@ -164,22 +152,15 @@
         .hack-word { cursor: pointer; color: var(--y); font-weight: bold; display: inline-block; transition: 0.1s; }
         .hack-word:hover { background: var(--y); color: #000; box-shadow: 0 0 10px var(--y); }
         
-        /* STYLE MOTS UTILISÉS (BUGGÉS) */
         .hack-word.used {
-            color: #555 !important;
-            text-decoration: line-through;
-            pointer-events: none;
-            opacity: 0.6;
-            animation: glitch-anim 0.3s infinite;
+            color: #555 !important; text-decoration: line-through; pointer-events: none;
+            opacity: 0.6; animation: glitch-anim 0.3s infinite;
         }
 
         @keyframes glitch-anim {
-            0% { transform: translate(0); }
-            20% { transform: translate(-2px, 2px); }
-            40% { transform: translate(-2px, -2px); }
-            60% { transform: translate(2px, 2px); }
-            80% { transform: translate(2px, -2px); }
-            100% { transform: translate(0); }
+            0% { transform: translate(0); } 20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(-2px, -2px); } 60% { transform: translate(2px, 2px); }
+            80% { transform: translate(2px, -2px); } 100% { transform: translate(0); }
         }
         
         .hack-char { opacity: 0.6; }
@@ -188,25 +169,23 @@
         .hack-log { margin-top: 20px; border-top: 1px dashed var(--line); padding-top: 10px; min-height: 60px; font-family: monospace; }
         .log-entry { margin-bottom: 2px; }
         
-        /* GROS CARRÉS DE RÉSULTAT (SEUL ÉLÉMENT AGRANDI) */
         .res-square { font-size: 1.6rem; display:inline-block; margin-right:2px; line-height: 1; vertical-align: middle; }
-
-        /* HEADER TENTATIVES (VIES) */
-        .hack-header { 
-            display: flex; align-items: center; gap: 10px; margin-bottom: 10px; 
-            border-bottom: 1px dashed var(--line); padding-bottom: 5px;
+        .hack-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; border-bottom: 1px dashed var(--line); padding-bottom: 5px; }
+        
+        /* --- CREDITS FOOTER --- */
+        .credits-footer {
+            margin-top: auto; border-top: 1px solid var(--line); padding-top: 8px;
+            font-size: 0.65rem; text-align: center; opacity: 0.5; letter-spacing: 1px;
         }
-        .try-block { display: inline-block; width: 12px; height: 16px; background: var(--g); margin-right: 4px; }
     </style>
 </head>
 <body data-theme="green" class="glitch-active">
 
     <!-- BOOT LAYER -->
     <div id="bootLayer">
-        <!-- LOGO CORRIGÉ (Fichier local GitHub) -->
         <img class="robco-logo" src="robco_logo.png" onerror="this.style.display='none'">
         <div id="bootStart">
-            <button class="power-btn" onclick="window.App.powerOn()">INITIALISER</button>
+            <button class="power-btn" onclick="window.App.powerOn()">INITIALISER SYSTÈME</button>
         </div>
         <div id="bootLoad" style="display:none; text-align:center">
             <div id="bootMsg">INITIALISATION...</div>
@@ -219,14 +198,13 @@
         <div class="ui-layer" id="uiLayer">
             <div class="top">
                 <div style="display:flex; align-items:center; gap:10px;">
-                    <!-- MINI LOGO CORRIGÉ (Fichier local GitHub) -->
                     <div class="header-logo"><img src="robco_logo.png" style="width:40px;" onerror="this.style.display='none'"></div>
                     <div class="banner" id="banner"></div>
                 </div>
                 <div style="display:flex; gap:10px;">
-                     <!-- FIX RESET 1 : Utiliser App.forceReload pour utiliser l'URL d'origine -->
-                     <button class="btn-power" onclick="window.App.forceReload()" title="Redémarrer">⚡</button>
-                     <button class="btn" style="font-size:0.8rem; padding:6px 10px; border-width:1px" onclick="window.Admin.open()">☰ SUPERVISEUR</button>
+                     <!-- REBOOT VISUEL (Soft Reboot) -->
+                     <button class="btn-power" onclick="window.App.softReboot()" title="Redémarrer">⚡</button>
+                     <button class="btn" style="font-size:0.8rem; padding:6px 10px; border-width:1px" onclick="window.Admin.open()">☰ CONFIG</button>
                 </div>
             </div>
             <div class="divider"></div>
@@ -241,18 +219,26 @@
 
                     <!-- ADD BUTTONS -->
                     <div class="edit-btn" id="addControls" style="margin-top:20px; border-top:1px dashed var(--line); padding-top:10px; display:flex; gap:10px;">
-                        <div class="btn-add" style="flex:1" onclick="window.Direct.addItem('file')">+ LIGNE</div>
+                        <div class="btn-add" style="flex:1" onclick="window.Direct.addItem('file')">+ FICHIER</div>
                         <div class="btn-add" style="flex:1" onclick="window.Direct.addItem('folder')">+ DOSSIER</div>
                     </div>
                 </div>
                 
                 <div class="card">
-                    <div class="h">STATUT</div>
-                    <div style="margin-bottom:5px">ALIM : <span id="statPower">OK</span></div>
-                    <div id="doorDisplay" style="margin-bottom:10px">PORTE : <span id="doorVal">...</span></div>
-                    <div class="divider"></div>
-                    <div class="h">AIDE</div>
-                    <div class="tiny" id="helpBox"></div>
+                    <div style="flex:1">
+                        <div class="h">STATUT ABRI</div>
+                        <div style="margin-bottom:5px">ALIM : <span id="statPower">OK</span></div>
+                        <div id="doorDisplay" style="margin-bottom:10px"><span id="doorName">...</span> : <span id="doorVal">...</span></div>
+                        <div class="divider"></div>
+                        <div class="h">PROTOCOLES</div>
+                        <div class="tiny" id="helpBox"></div>
+                    </div>
+                    
+                    <!-- CREDITS FOOTER -->
+                    <div class="credits-footer">
+                        FALLOUT & ROBCO © BETHESDA SOFTWORKS LLC / ZENIMAX.<br>
+                        INTERFACE CREATED WITH LOVE BY RAPTOL - V7.0
+                    </div>
                 </div>
             </div>
         </div>
@@ -261,34 +247,39 @@
     <!-- ADMIN PANEL -->
     <div class="overlay" id="adminPanel">
         <div class="admin-card">
-            <div class="h">PANNEAU MJ — V7 (Final)</div>
+            <div class="h">PANNEAU DE CONTRÔLE — V7.0</div>
             <div class="admin-tabs">
                 <button class="tab-btn active" onclick="window.Admin.tab('content')">Contenu</button>
                 <button class="tab-btn" onclick="window.Admin.tab('security')">Sécurité & Porte</button>
                 <button class="tab-btn" onclick="window.Admin.tab('system')">Système</button>
             </div>
             <div id="adminContent">
-                
                 <div id="tab-content" class="admin-content active">
                     <div class="form-row" style="text-align:center; padding:30px; border:1px solid var(--line)">
-                        <div class="tiny" style="margin-bottom:20px">Pour modifier le contenu (Titre, Utilisateur, Aide, Dossiers, Lignes), activez l'édition puis cliquez sur l'élément à modifier directement sur l'écran.</div>
-                        <button class="btn" style="width:100%" onclick="window.App.toggleEdit()">BASCULER MODE ÉDITION</button>
+                        <div class="tiny" style="margin-bottom:20px">Pour modifier les données (Titres, Notes, Dossiers), activez le mode édition puis cliquez directement sur les éléments de l'interface.</div>
+                        <button class="btn" style="width:100%" onclick="window.App.toggleEdit()">ACTIVER / DÉSACTIVER ÉDITION</button>
                     </div>
                 </div>
                 <div id="tab-security" class="admin-content">
                     <div class="two">
-                        <div class="mj-col"><div class="form-row"><label>MDP Terminal</label><input class="form-input" id="setPwd"></div><div class="form-row"><label>Verrouiller au boot ?</label><select class="form-input" id="setGateOn"><option value="true">Oui</option><option value="false">Non</option></select></div><div class="form-row"><label>Gérer une Porte ?</label><select class="form-input" id="setHasDoor"><option value="true">Oui</option><option value="false">Non</option></select></div><div class="form-row"><label>État Porte</label><input class="form-input" id="setStatDoorInit"></div></div>
+                        <div class="mj-col"><div class="form-row"><label>MDP Terminal</label><input class="form-input" id="setPwd"></div><div class="form-row"><label>Verrouiller au boot ?</label><select class="form-input" id="setGateOn"><option value="true">Oui</option><option value="false">Non</option></select></div><div class="form-row"><label>Gérer une Porte ?</label><select class="form-input" id="setHasDoor"><option value="true">Oui</option><option value="false">Non</option></select></div>
+                        
+                        <!-- NOUVEAUX CHAMPS PORTE -->
+                        <div class="form-row"><label>Nom Porte</label><input class="form-input" id="setDoorName"></div>
+                        <div class="form-row"><label>État Init. (Fermé/Ouvert)</label><input class="form-input" id="setStatDoorInit"></div>
+                        
+                        </div>
                         <div class="mj-col">
                             <div class="form-row"><label>Activer Hack ?</label><select class="form-input" id="setHack"><option value="true">Oui</option><option value="false">Non</option></select></div>
                             <div class="form-row"><label>Essais avant Hack</label><input class="form-input" id="setHackTries" type="number"></div>
                             <div class="form-row"><label>Thème Mots</label><select class="form-input" id="setWordMode">
                                 <option value="securite">Sécurité</option>
-                                <option value="standard">Informatique (Standard)</option>
+                                <option value="standard">Informatique</option>
                                 <option value="medical">Médical</option>
                                 <option value="militaire">Militaire</option>
                                 <option value="industriel">Industriel</option>
                                 <option value="vault">Abri / Fallout</option>
-                                <option value="custom">PERSONNALISÉ (Liste ci-dessous)</option>
+                                <option value="custom">PERSONNALISÉ</option>
                             </select></div>
                         </div>
                     </div>
@@ -300,20 +291,20 @@
                 <div id="tab-system" class="admin-content">
                     <div class="two">
                         <div class="mj-col">
-                            <div class="form-row"><label>Couleur</label><select class="form-input" id="setTheme"><option value="green">Vert</option><option value="amber">Ambre</option><option value="blue">Bleu</option></select></div>
-                            <div class="form-row"><label>Effets Glitch / CRT</label><select class="form-input" id="setGlitch"><option value="true">Activés</option><option value="false">Désactivés</option></select></div>
+                            <div class="form-row"><label>Couleur</label><select class="form-input" id="setTheme"><option value="green">Vert (Classique)</option><option value="amber">Ambre</option><option value="blue">Bleu (Système)</option></select></div>
+                            <div class="form-row"><label>Effets CRT</label><select class="form-input" id="setGlitch"><option value="true">Activés</option><option value="false">Désactivés</option></select></div>
                         </div>
                         <div class="mj-col">
-                            <div class="form-row"><label>Effets Sonores</label><select class="form-input" id="setSfx"><option value="true">Activés</option><option value="false">Désactivés</option></select></div>
-                            <div class="form-row"><label>Toujours Booter ?</label><select class="form-input" id="setBootAlways"><option value="false">Non (Seulement 1ère fois)</option><option value="true">Oui (À chaque F5)</option></select></div>
-                            <div class="form-row"><label>MDP MJ</label><input class="form-input" type="password" id="setAdminPwd"></div>
+                            <div class="form-row"><label>Sons</label><select class="form-input" id="setSfx"><option value="true">Activés</option><option value="false">Désactivés</option></select></div>
+                            <div class="form-row"><label>Toujours Booter ?</label><select class="form-input" id="setBootAlways"><option value="false">Non (Rapide)</option><option value="true">Oui (À chaque F5)</option></select></div>
+                            <div class="form-row"><label>MDP Admin</label><input class="form-input" type="password" id="setAdminPwd"></div>
                             
                             <div class="divider"></div>
                             
                             <div class="sys-actions">
-                                <button class="btn" onclick="window.App.exportData()">Sauvegarder (JSON)</button>
+                                <button class="btn" onclick="window.App.exportData()">Sauvegarder</button>
                                 <label class="btn" style="cursor:pointer">Importer<input id="fileImport" type="file" hidden onchange="window.App.importData(this)"></label>
-                                <button class="btn btn-reset" onclick="window.App.reset()">Reset</button>
+                                <button class="btn btn-reset" onclick="window.App.reset()">Reset Usine</button>
                             </div>
                         </div>
                     </div>
@@ -326,61 +317,60 @@
         </div>
     </div>
 
-    <!-- AUDIO CORRIGÉ & FIABILISÉ -->
     <audio id="s_click" preload="auto" src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg"></audio>
     <audio id="s_boot" preload="auto" src="https://actions.google.com/sounds/v1/science_fiction/scifi_beep_electric.ogg"></audio>
     <audio id="s_ok" preload="auto" src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"></audio>
     <audio id="s_err" preload="auto" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
-    
-    <!-- NOUVEAU : SON FRAPPE (BOUTON CASSETTE) -->
     <audio id="s_type" preload="auto" src="https://actions.google.com/sounds/v1/foley/cassette_tape_button.ogg"></audio>
-    
-    <!-- NOUVEAU : SON DOSSIER (BOOT) -->
     <audio id="s_folder" preload="auto" src="https://actions.google.com/sounds/v1/science_fiction/scifi_beep_electric.ogg"></audio>
 
 <script>
-/* --- DONNÉES INTÉGRÉES (SECURE-TERMLINK v34) --- */
+/* --- DONNÉES INTÉGRÉES : ABRI 404 --- */
 const DEF = {
-    machine: "ROBCO INDUSTRIES™ SECURE-TERMLINK", 
-    user: "OFFICIER SÉCURITÉ", 
+    machine: "ROBCO UNIFIED OPERATING SYSTEM V7.0", 
+    user: "SUPERVISEUR ABRI", 
     theme: "green", 
-    pwd: "SECURE48", 
-    gate: true, 
-    hasDoor: true, 
-    doorState: "SCELLÉE", 
-    power: "OK", 
+    pwd: "ADMIN", 
+    gate: false,      
+    hasDoor: true,    
+    doorName: "SAS PRINCIPAL", // Nouveau champ par défaut
+    doorState: "VERROUILLÉ", 
+    power: "STABLE (98%)", 
     hackAtStart: false, 
     hackTries: 3, 
     hackDifficulty: "medium", 
-    wordMode: "securite", 
+    wordMode: "vault", 
     sfx: true,          
     glitch: true,       
     bootAlways: false,  
     customWords: [],    
     root: [
-        { "id": "folder_rapports", "label": "➤ RAPPORTS DE SÉCURITÉ", "type": "folder", "content": [
-            { "id": "page_sec1", "label": "Rapport #1 (Périmètre)", "type": "file", "content": "01 novembre 2077 : Test de remise en ligne des barrières périmétriques. OK.\n\n05 novembre 2077 : Alarme intrusion secteur C — neutralisée. Compte-rendu envoyé au Central.\n\n12 novembre 2077 : Anomalie détection radiologique, zone isolée, personnel évacué." },
-            { "id": "page_sec2", "label": "Rapport #2 (Audit)", "type": "file", "content": "18 novembre 2077 : Vérification intégrité coffre-fort nucléaire : SCELLÉ.\n\n20 novembre 2077 : Audit interne — caméras 3/4 hors-ligne, intervention planifiée.\n\n25 novembre 2077 : Exercice d'évacuation — personnel : 98% conformité." }
+        { "id": "dir_admin", "label": "➤ ADMINISTRATION", "type": "folder", "content": [
+            { "id": "file_welcome", "label": "Bienvenue Superviseur", "type": "file", "content": "Félicitations pour votre promotion au rang de Superviseur.\n\nRappel : Le bonheur des résidents est obligatoire. Tout signe de tristesse doit être signalé au service de rééducation.\n\nRobCo vous souhaite une journée productive et radioactivement sûre." },
+            { "id": "sub_budget", "label": "➤ BUDGET & RESSOURCES", "type": "folder", "content": [
+                { "id": "note_water", "label": "Rationnement Eau", "type": "file", "content": "NOTE DE SERVICE #442\n\nEn raison de l'usure prématurée de la puce de purification, les rations d'eau sont réduites de 10%.\nSuggérez aux résidents de boire leur urine recyclée deux fois au lieu d'une. C'est bon pour le moral." },
+                { "id": "note_power", "label": "Coupures Planifiées", "type": "file", "content": "L'éclairage des niveaux inférieurs sera coupé entre 02h00 et 06h00 pour économiser les noyaux à fusion.\nSi les résidents ont peur du noir, distribuez des jouets Pip-Boy." }
+            ]}
         ]},
-        { "id": "folder_logs", "label": "➤ INCIDENTS & LOGS", "type": "folder", "content": [
-            { "id": "log_1", "label": "Connexion 25/11", "type": "file", "content": "Dernière connexion : 25 novembre 2077." },
-            { "id": "log_2", "label": "Scan Périmètre", "type": "file", "content": "Scan périmètre : OK. Caméras en secteur A et B synchronisées." },
-            { "id": "log_3", "label": "Anomalie Sas 4", "type": "file", "content": "Note : traces de suie présentes près du sas 4 — inspection recommandée." }
+        { "id": "dir_exp", "label": "➤ EXPÉRIENCES / RECHERCHE", "type": "folder", "content": [
+            { "id": "exp_88", "label": "Projet ALPHA-7", "type": "file", "content": "OBJET : Test de résistance à la musique country en boucle.\n\nJOUR 1 : Sujets calmes.\nJOUR 4 : Agitation légère.\nJOUR 10 : Trois sujets tentent de creuser le sol avec des cuillères.\n\nCONCLUSION : Augmenter le volume." },
+            { "id": "exp_99", "label": "Projet SODA", "type": "file", "content": "OBJET : Remplacement du sang par du Nuka-Cola Quantum.\n\nSUJET #42 : Décédé (Explosion bleue).\nSUJET #43 : Brille dans le noir. Plaintes de migraines.\n\nNote : Utile comme lampe de poche de secours." }
         ]},
-        { "id": "folder_proto", "label": "➤ PROTOCOLES D'ACCÈS", "type": "folder", "content": [
-            { "id": "page_proto", "label": "Niveaux d'accréditation", "type": "file", "content": "- Niveau 1 : Personnel autorisé — badge vert requis.\n- Niveau 2 : Accès restreint — badge rouge + biométrie.\n- Niveau 3 : Accès coffre — badge admin + clé physique + double authentification.\n\nEn cas de perte de badge, alerter Central Sécurité immédiatement." }
+        { "id": "dir_sec", "label": "➤ SÉCURITÉ & SURVEILLANCE", "type": "folder", "content": [
+            { "id": "cam_logs", "label": "Logs Caméras", "type": "file", "content": "CAM 01 (SAS) : RAS.\nCAM 04 (CAFÉTÉRIA) : Bagarre pour la dernière boîte de Sugar Bombs.\nCAM 09 (RÉACTEUR) : Fuite mineure détectée. Le technicien ne porte pas de masque. Tant pis." },
+            { "id": "incident_report", "label": "Rapport Incident 22/10", "type": "file", "content": "Un Radcafard a été trouvé dans la crèche.\nMesures prises : Le Radcafard a été nommé mascotte officielle de l'étage B." }
         ]},
-        { "id": "folder_memos", "label": "➤ MÉMOS SÉCURITÉ", "type": "folder", "content": [
-            { "id": "memo_1", "label": "Rappel Confinement", "type": "file", "content": "Rappel : maintenir les protocoles de confinement après toute intrusion." },
-            { "id": "memo_2", "label": "Ordre Prioritaire", "type": "file", "content": "Ordre : Priorité aux zones contenant matériel sensible — rapporter toute activité suspecte." },
-            { "id": "memo_3", "label": "Instruction Radio", "type": "file", "content": "Instruction : Ne partagez jamais les codes d'accès par radio non sécurisée." }
+        { "id": "dir_perso", "label": "➤ JOURNAL PERSONNEL", "type": "folder", "content": [
+            { "id": "diary_1", "label": "Jour 1", "type": "file", "content": "Ils m'ont enfin donné les clés. Je suis le maître ici. Personne ne saura jamais que j'ai triché au test G.O.A.T." },
+            { "id": "diary_200", "label": "Jour 200", "type": "file", "content": "Je m'ennuie. Je pense déclencher une fausse alerte d'invasion juste pour voir les résidents courir en pyjama." }
         ]},
-        { "id": "sys_about", "label": "➤ À PROPOS / SYSTÈME", "type": "file", "content": "SECURE-TERMLINK v3.1\nUNITÉ : SEC-ROBCO-01\nLOCALISATION : Installation de Sécurité RobCo — Secteur Alpha" }
+        { "id": "sys_info", "label": "➤ SYSTÈME", "type": "file", "content": "ROBCO UNIFIED OS V7.0\nNOYAU : LINUX-ATOM-32\nRAM : 64KB (LARGEMENT SUFFISANT)\n\nDERNIÈRE MAINTENANCE : 23 OCTOBRE 2077\nPROCHAINE MAINTENANCE : JAMAIS" }
     ],
     help: [
-        "• Priorité : protection des actifs et du personnel.",
-        "• En cas d'alerte nucléaire, suivre le protocole SEC-RED-01.",
-        "• Signalez toute anomalie au bureau Central Sécurité (extension 00-SEC)."
+        "• Le Superviseur a toujours raison.",
+        "• En cas d'incendie : protégez le matériel avant les personnes.",
+        "• La sortie est interdite sans autorisation écrite du Conseil.",
+        "• RobCo n'est pas responsable des mutations spontanées."
     ]
 };
 
@@ -394,9 +384,7 @@ const BANKS = {
 };
 
 let DATA = JSON.parse(JSON.stringify(DEF));
-let STATE = { editing: false, view: 'boot', currentFolder: null, path: [], authInput: "", wrongCount: 0 };
-
-/* --- ORDONNANCEMENT FIXÉ : UTILITAIRES D'ABORD --- */
+let STATE = { editing: false, view: 'boot', currentFolder: null, currentFile: null, path: [], authInput: "", wrongCount: 0 };
 
 window.Util = {
     type: (el, txt, spd, cb) => {
@@ -430,9 +418,9 @@ window.Admin = {
     open: () => { if(DATA.adminPwd) { const p = prompt("MDP MJ:"); if(p!==DATA.adminPwd) return alert("Refusé"); } document.getElementById('adminPanel').classList.add('active'); window.Admin.populate(); },
     close: () => { 
         document.getElementById('adminPanel').classList.remove('active'); 
-        window.App.save(); 
-        window.App.sync(); 
-        window.App.render(); // FIX REFRESH PORTE
+        window.App.save(); window.App.sync(); 
+        if(STATE.view === 'file' && STATE.currentFile) window.App.viewFile(STATE.currentFile);
+        else window.App.render();
     },
     tab: (id) => {
         document.querySelectorAll('.admin-content').forEach(e=>e.classList.remove('active'));
@@ -442,8 +430,8 @@ window.Admin = {
     },
     populate: () => {
         const getVal = (id, val) => { const el=document.getElementById(id); if(el) el.value = val; };
-        // setMachineName and setUserName removed
-        getVal('setDoorState', DATA.doorState);
+        getVal('setDoorName', DATA.doorName || "SAS PRINCIPAL"); // Charger le nom
+        getVal('setStatDoorInit', DATA.doorState); // Charger l'état
         getVal('setHasDoor', DATA.hasDoor.toString()); getVal('setGamePwd', DATA.pwd); getVal('setGateOn', DATA.gate.toString());
         getVal('setHackAtStart', DATA.hackAtStart.toString()); getVal('setTheme', DATA.theme); getVal('setAdminPwd', DATA.adminPwd||"");
         getVal('setHackTries', DATA.hackTries); getVal('setWordMode', DATA.wordMode || 'securite');
@@ -462,8 +450,9 @@ window.Admin = {
     },
     save: () => {
         const getVal = (id) => document.getElementById(id)?.value;
-        // DATA.machine and DATA.user NOT updated here anymore
-        DATA.hasDoor = (getVal('setHasDoor') === 'true'); DATA.doorState = getVal('setStatDoorInit');
+        DATA.doorName = getVal('setDoorName'); // Sauvegarder le nom
+        DATA.doorState = getVal('setStatDoorInit'); // Sauvegarder l'état
+        DATA.hasDoor = (getVal('setHasDoor') === 'true'); 
         DATA.gate = (getVal('setGateOn') === 'true'); DATA.pwd = getVal('setGamePwd');
         DATA.hackAtStart = (getVal('setHackAtStart') === 'true'); 
         DATA.hackTries = parseInt(getVal('setHackTries')); DATA.theme = getVal('setTheme'); DATA.adminPwd = getVal('setAdminPwd');
@@ -481,6 +470,8 @@ window.Admin = {
         window.App.save(); alert("Sauvegardé"); window.Admin.close();
     },
 };
+
+document.getElementById('setWordMode').addEventListener('change', window.Admin.checkCustom);
 
 window.Hack = {
     start: () => {
@@ -587,19 +578,13 @@ window.Hack = {
             setTimeout(() => { STATE.view='main'; window.App.goHome(); }, 2000);
         } else {
             s.tries--; window.App.playSound('s_err'); 
-            
             let bars = ""; for(let i=0; i<s.tries; i++) bars += " ■";
             document.getElementById('tryBars').innerText = bars;
-            
             let matchBars = ""; 
             for(let i=0; i<sol.length; i++) {
-                if (word[i] === sol[i]) {
-                    matchBars += `<span class="res-square" style="color:var(--g)">■</span>`; 
-                } else {
-                    matchBars += `<span class="res-square" style="color:var(--err); opacity:0.8">■</span>`; 
-                }
+                if (word[i] === sol[i]) matchBars += `<span class="res-square" style="color:var(--g)">■</span>`; 
+                else matchBars += `<span class="res-square" style="color:var(--err); opacity:0.8">■</span>`; 
             }
-
             log.innerHTML += `<div class="log-entry">> ${word} : ÉCHEC.</div>`;
             log.innerHTML += `<div class="log-entry">> RESSEMBLANCE : ${matchBars}</div>`;
             log.innerHTML += `<div class="log-entry">> RESTANT : ${s.tries}</div>`;
@@ -613,8 +598,6 @@ window.Hack = {
     }
 };
 
-/* --- APPLICATION PRINCIPALE (DÉFINIE APRÈS LES OUTILS) --- */
-
 window.App = {
     // FIX RESET 2 : Stocker l'URL d'origine au chargement
     homeURL: window.location.href,
@@ -626,6 +609,7 @@ window.App = {
             try { DATA = {...DEF, ...JSON.parse(d)}; } catch(e){ console.error(e); }
         }
         if(DATA.sfx === undefined) DATA.sfx = true;
+        if(!DATA.doorName) DATA.doorName = "SAS PRINCIPAL"; // Rétrocompatibilité
         window.App.sync();
     },
     save: () => { localStorage.setItem('ft_v34', JSON.stringify(DATA)); window.App.sync(); },
@@ -662,6 +646,8 @@ window.App = {
         pwr.style.borderBottom = STATE.editing ? "1px dashed var(--g)" : "none";
         pwr.onblur = () => { DATA.power = pwr.innerText; window.App.save(); };
 
+        // MAJ DOOR DISPLAY
+        safeSet('doorName', DATA.doorName || "SAS PRINCIPAL");
         safeSet('doorVal', DATA.doorState);
         const d = document.getElementById('doorDisplay'); if(d) d.style.display = DATA.hasDoor ? 'flex' : 'none';
 
@@ -707,29 +693,50 @@ window.App = {
         }
     },
     
-    // FIX RESET 3 : Utiliser homeURL pour forcer le retour à l'appli (pas de reload du blob)
+    // --- SYSTEME DE REBOOT & RESET (SOFT REBOOT) ---
     reset: () => { 
         if(confirm("Reset total des données ?")) { 
-            localStorage.removeItem('ft_v34'); 
-            window.location.href = window.App.homeURL;
+            localStorage.removeItem('ft_v34');
+            DATA = JSON.parse(JSON.stringify(DEF)); // FIX : Réinitialiser la mémoire
+            window.App.softReboot(); 
         } 
     },
-    forceReload: () => {
-        window.location.href = window.App.homeURL;
+    
+    softReboot: () => {
+        // Simule un redémarrage sans recharger la page
+        document.getElementById('uiLayer').style.opacity = 0;
+        setTimeout(() => {
+            document.getElementById('bootLayer').style.display = 'flex';
+            document.getElementById('bootLayer').style.opacity = 1;
+            document.getElementById('bootStart').style.display = 'block';
+            document.getElementById('bootLoad').style.display = 'none';
+            STATE.view = 'boot';
+            STATE.path = [];
+            STATE.currentFolder = null;
+            STATE.currentFile = null;
+            // Réinitialiser l'état interne si nécessaire
+            window.App.init();
+        }, 800);
     },
 
-    playSound: (id) => { 
-        if(DATA.sfx === false) return; 
-        const s = document.getElementById(id); if(s){s.currentTime=0; s.play().catch(()=>{});} 
-    },
+    forceReload: () => { window.App.softReboot(); }, // Redirection vers softReboot
+    
+    playSound: (id) => { if(DATA.sfx === false) return; const s = document.getElementById(id); if(s){s.currentTime=0; s.play().catch(()=>{});} },
 
     toggleEdit: () => {
-        STATE.editing = !STATE.editing;
+        STATE.editing = !STATE.editing; 
         document.body.classList.toggle('editing', STATE.editing);
-        window.Admin.close(); window.App.sync(); window.App.render();
+        window.Admin.close(); 
+        window.App.sync(); 
+        
+        // Rafraîchir la vue actuelle sans revenir à l'accueil
+        if (STATE.view === 'file' && STATE.currentFile) {
+            window.App.viewFile(STATE.currentFile);
+        } else {
+            window.App.render();
+        }
     },
 
-    // --- BOOT ---
     powerOn: () => {
         window.App.playSound('s_boot');
         document.getElementById('bootStart').style.display = 'none';
@@ -757,9 +764,7 @@ window.App = {
         const hasBooted = sessionStorage.getItem('ft_boot_once');
         if(!hasBooted || DATA.bootAlways === true) {
             sessionStorage.setItem('ft_boot_once', 'true');
-            // Laisser l'écran de boot
         } else {
-            // Skip boot
             document.getElementById('bootLayer').style.display = 'none';
             document.getElementById('uiLayer').style.opacity = 1;
             if(DATA.gate) window.App.showLogin(); else window.App.goHome();
@@ -784,7 +789,7 @@ window.App = {
             let showTimeout; input.focus(); c.onclick = () => input.focus();
             
             input.oninput = (e) => {
-                window.App.playSound('s_type'); // SON DE FRAPPE (TYPE)
+                window.App.playSound('s_type'); 
                 const val = input.value.toUpperCase(); input.value = val;
                 let masked = ""; for(let i=0; i<val.length-1; i++) masked += "*"; if(val.length > 0) masked += val.slice(-1);
                 display.innerText = masked;
@@ -793,31 +798,23 @@ window.App = {
             input.onkeydown = (e) => {
                 if(e.key === 'Enter') {
                     const val = input.value.trim(); input.disabled = true;
-                    // Cheatcode 'H' pour le hack immédiat (si activé)
                     if(val === 'H' && DATA.hackAtStart) { window.Hack.start(); return; }
-
                     if(val === (DATA.pwd || '').toUpperCase()) { 
                         window.App.playSound('s_ok');
-                        window.Util.type(c, "\n\n> ACCÈS AUTORISÉ.\n> INITIALISATION...", 20, () => {
-                            STATE.view = 'main'; setTimeout(() => window.App.goHome(), 1000);
-                        });
+                        window.Util.type(c, "\n\n> ACCÈS AUTORISÉ.\n> INITIALISATION...", 20, () => { STATE.view = 'main'; setTimeout(() => window.App.goHome(), 1000); });
                     } else {
                         window.App.playSound('s_err');
                         window.Util.type(c, "\n> ACCÈS REFUSÉ.", 20, () => {
                             STATE.wrongCount++;
-                            // CORRECTION HACK LOOP (Ne dépend plus de hackAtStart)
                             if(STATE.wrongCount >= (DATA.hackThreshold || 3)) {
                                 window.Util.type(c, "\n> VIOLATION. INTRUSION ? (O/N)", 20, () => {
-                                    input.value=""; display.innerText=""; input.disabled = false; input.focus();
-                                    input.oninput = null;
+                                    input.value=""; display.innerText=""; input.disabled = false; input.focus(); input.oninput = null;
                                     input.onkeydown = (ev) => {
                                         if(ev.key.toUpperCase() === 'O') window.Hack.start();
                                         if(ev.key.toUpperCase() === 'N') { STATE.wrongCount=0; window.App.showLogin(); }
                                     };
                                 });
-                            } else {
-                                setTimeout(window.App.showLogin, 1000);
-                            }
+                            } else { setTimeout(window.App.showLogin, 1000); }
                         });
                     }
                 }
@@ -829,83 +826,125 @@ window.App = {
     enterFolder: (item) => { STATE.currentFolder = item.content; STATE.path.push({label: item.label, ref: item.content}); window.App.render(); },
     goUp: () => { if(STATE.path.length > 1) { STATE.path.pop(); STATE.currentFolder = STATE.path[STATE.path.length-1].ref; window.App.render(); } },
 
+    // --- LECTURE & ÉDITION DE FICHIER ---
+    viewFile: (item) => {
+        STATE.view = 'file'; // Mode lecture
+        STATE.currentFile = item; // Sauvegarde la référence pour l'édition
+        
+        const c = document.getElementById('console');
+        c.innerHTML = ''; 
+        const title = document.getElementById('pageTitle');
+        if (title) title.innerText = item.label.toUpperCase(); 
+
+        // Contenu du fichier
+        const content = document.createElement('div');
+        content.style.whiteSpace = 'pre-wrap'; 
+        content.style.marginBottom = '20px';
+        content.innerText = item.content; 
+        
+        // Mode Édition Activé
+        if (STATE.editing) {
+            content.contentEditable = true;
+            content.style.border = "1px dashed var(--g)";
+            content.style.padding = "10px";
+            content.style.backgroundColor = "rgba(0, 255, 0, 0.05)";
+            content.focus(); // Focus automatique pour encourager l'édition
+            
+            // Sauvegarde automatique quand on quitte la zone de texte
+            content.onblur = () => {
+                item.content = content.innerText;
+                window.App.save();
+            };
+        }
+
+        c.appendChild(content);
+
+        // Bouton Retour
+        const back = document.createElement('div');
+        back.className = 'mlink interactive';
+        back.innerText = '< RETOUR';
+        back.onclick = () => { 
+            STATE.currentFile = null; // Nettoyage
+            window.App.render(); // Retour liste
+        }; 
+        c.appendChild(back);
+    },
+
     render: () => {
         if(STATE.view === 'login' || STATE.view === 'hack') return;
         STATE.view = 'main';
         const c = document.getElementById('console'); const title = document.getElementById('pageTitle'); const bread = document.getElementById('breadcrumb');
-        
         c.style.opacity = 0.5;
         setTimeout(() => {
             c.innerHTML = '';
             if(title) title.innerText = STATE.path[STATE.path.length-1].label.toUpperCase();
-            
-            // Fil d'Ariane cliquable
             if(bread) {
                 bread.innerHTML = STATE.path.map((item, idx) => {
                     const separator = idx > 0 ? ' > ' : '';
                     const link = `<span class="path-segment" onclick="window.App.gotoPathIndex(${idx})">${item.label}</span>`;
                     return separator + link;
-                }).join('');
-                bread.prepend('[ '); bread.appendChild(document.createTextNode(' ]'));
+                }).join(''); bread.prepend('[ '); bread.appendChild(document.createTextNode(' ]'));
             }
             
             STATE.currentFolder.forEach((item, i) => {
                 const row = document.createElement('div'); 
-                const typeClass = (item.type === 'folder') ? 'interactive' : 'static';
+                // Fichiers maintenant interactifs aussi
+                const typeClass = (item.type === 'folder' || item.type === 'file') ? 'interactive' : 'static';
                 row.className = `mlink ${typeClass}`;
                 
                 const span = document.createElement('span');
-                span.innerText = (item.type === 'folder' ? '>> ' : '') + (item.label || item.content);
+                // Ajout de >> seulement pour les dossiers
+                const prefix = (item.type === 'folder') ? '>> ' : '• '; 
+                span.innerText = prefix + (item.label || item.content);
                 if(item.type === 'folder') span.style.fontWeight = "bold";
                 span.className = STATE.editing ? 'editable-text' : '';
-                
-                row.appendChild(span); // TEXTE D'ABORD
+                row.appendChild(span); 
 
                 if (STATE.editing) {
-                    span.contentEditable = true;
-                    span.style.flexGrow = "1"; // Permet au texte de prendre la place
+                    span.contentEditable = true; span.style.flexGrow = "1";
                     span.onblur = () => {
-                        item.label = span.innerText.replace('>> ', '');
-                        if(item.type === 'file') item.content = item.label; 
+                        item.label = span.innerText.replace('>> ', '').replace('• ', '');
+                        // if(item.type === 'file') item.content = item.label; 
                         window.App.save();
                     };
-
-                    // Conteneur pour aligner les boutons à droite
-                    const actions = document.createElement('div');
-                    actions.style.display = 'flex';
-                    actions.style.alignItems = 'center';
-
+                    const actions = document.createElement('div'); actions.style.display = 'flex'; actions.style.alignItems = 'center';
+                    
+                    // BOUTON OUVRIR POUR LES DOSSIERS (Existant)
                     if(item.type === 'folder') {
                         const open = document.createElement('span'); 
-                        open.style.cursor='pointer'; 
-                        open.style.color='var(--g)'; 
-                        open.innerText='[OUVRIR]'; 
-                        open.style.marginLeft='10px';
+                        open.style.cursor='pointer'; open.style.color='var(--g)'; open.innerText='[OUVRIR]'; open.style.marginLeft='10px';
                         open.onclick = (e) => { e.stopPropagation(); window.App.enterFolder(item); };
                         actions.appendChild(open);
                     }
+                    // NOUVEAU : BOUTON OUVRIR POUR LES FICHIERS (Ajouté comme demandé)
+                    else if(item.type === 'file') {
+                        const open = document.createElement('span'); 
+                        open.style.cursor='pointer'; open.style.color='var(--g)'; open.innerText='[OUVRIR]'; open.style.marginLeft='10px';
+                        open.onclick = (e) => { e.stopPropagation(); window.App.viewFile(item); };
+                        actions.appendChild(open);
+                    }
 
-                    const del = document.createElement('span'); 
-                    del.className = 'btn-del edit-btn'; 
-                    del.innerText = "[X]";
+                    const del = document.createElement('span'); del.className = 'btn-del edit-btn'; del.innerText = "[X]";
                     del.onclick = (e) => { e.stopPropagation(); window.Direct.deleteItem(i); };
                     actions.appendChild(del);
-
-                    row.appendChild(actions); // AJOUT DU CONTENEUR ACTIONS
+                    row.appendChild(actions);
                 } else {
+                    // CLIC : Ouvrir Dossier OU Lire Fichier
                     row.onclick = () => { 
-                        if(item.type === 'folder') {
+                        if(item.type === 'folder') { 
                             window.App.playSound('s_folder'); 
-                            window.App.enterFolder(item);
+                            window.App.enterFolder(item); 
+                        } else if (item.type === 'file') {
+                            window.App.playSound('s_click');
+                            window.App.viewFile(item); 
                         }
                     };
                 }
                 c.appendChild(row);
             });
 
-            // Affichage Lien Porte (CORRECTIF: Apparaît/Disparaît instantanément quand on ferme le panneau MJ)
             if (STATE.path.length === 1 && DATA.hasDoor === true) {
-                const d = document.createElement('div'); d.className = 'mlink interactive'; d.innerHTML = `<span>[VERROU] CONTRÔLE PORTE</span>`;
+                const d = document.createElement('div'); d.className = 'mlink interactive'; d.innerHTML = `<span>[VERROU] CONTRÔLE SAS</span>`;
                 d.onclick = () => { window.App.playSound('s_folder'); window.App.showDoor(); }; c.appendChild(d);
             }
             c.style.opacity = 1;
@@ -914,15 +953,13 @@ window.App = {
 
     gotoPathIndex: (index) => {
         if (index < STATE.path.length - 1) {
-            STATE.currentFolder = STATE.path[index].ref;
-            STATE.path = STATE.path.slice(0, index + 1);
-            window.App.render();
+            STATE.currentFolder = STATE.path[index].ref; STATE.path = STATE.path.slice(0, index + 1); window.App.render();
         }
     },
 
     showDoor: () => {
         const c = document.getElementById('console'); document.getElementById('pageTitle').innerText = "SÉCURITÉ";
-        c.innerHTML = `<div style="margin-bottom:20px">STATUT : ${DATA.doorState}</div><div class="mlink interactive" onclick="window.App.setDoor('OUVERTE', ['ENVOI CODE...', 'OUVERTURE'])">OUVRIR</div><div class="mlink interactive" onclick="window.App.setDoor('VERROUILLÉE', ['VERROUILLAGE...', 'CONFIRMATION'])">VERROUILLER</div><div class="mlink interactive" style="margin-top:20px" onclick="window.App.goHome()">< RETOUR</div>`;
+        c.innerHTML = `<div style="margin-bottom:20px">STATUT : ${DATA.doorState}</div><div class="mlink interactive" onclick="window.App.setDoor('OUVERT', ['ENVOI CODE D\\'ACCÈS...', 'PRESSURISATION...', 'OUVERTURE SAS'])">OUVRIR LE SAS</div><div class="mlink interactive" onclick="window.App.setDoor('VERROUILLÉE', ['VERROUILLAGE MAGNÉTIQUE...', 'SCELLÉ'])">VERROUILLER LE SAS</div><div class="mlink interactive" style="margin-top:20px" onclick="window.App.goHome()">< RETOUR</div>`;
     },
     setDoor: (s, msgs) => { 
         DATA.doorState = s; window.App.save(); window.App.playSound('s_ok'); 
@@ -930,31 +967,17 @@ window.App = {
         let i=0; const seq = () => { if(i<msgs.length) { const d=document.createElement('div'); d.innerText="> "+msgs[i]; c.prepend(d); i++; setTimeout(seq, 500); } else { window.App.sync(); } }; seq();
     },
 
-    // CORRECTIF EXPORT : Méthode standard HTML5 sans target_blank (évite blocage popup)
     exportData: () => { 
         const blob = new Blob([JSON.stringify(DATA, null, 2)], {type:'application/json'}); 
-        // Créer l'URL blob
         const url = URL.createObjectURL(blob); 
-        // Créer l'élément de lien
-        const a = document.createElement('a'); 
-        a.style.display = 'none'; // Le cacher
-        a.href = url; 
-        a.download = 'terminal_backup.json'; 
-        // Ajouter au corps, cliquer, puis supprimer
-        document.body.appendChild(a); 
-        a.click(); 
-        document.body.removeChild(a);
-        // Nettoyer l'URL après un délai
+        const a = document.createElement('a'); a.style.display = 'none'; a.href = url; a.download = 'terminal_backup.json'; 
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
         setTimeout(() => URL.revokeObjectURL(url), 2000); 
     },
     importData: (input) => { const f = input.files[0]; if(!f) return; const r = new FileReader(); r.onload = (e) => { try { DATA = {...DEF, ...JSON.parse(e.target.result)}; window.App.save(); window.App.forceReload(); } catch(err){alert("Erreur JSON");} }; r.readAsText(f); },
-    hardReset: () => { if(confirm("Tout effacer ?")) { localStorage.removeItem('ft_v34'); window.App.forceReload(); } }
 };
 
-window.onload = () => {
-    window.App.init();
-    window.App.checkBoot();
-};
+window.onload = () => { window.App.init(); window.App.checkBoot(); };
 </script>
 </body>
 </html>
