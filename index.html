@@ -28,6 +28,13 @@
             --line: rgba(var(--g-rgb), .18);
         }
 
+        html[data-theme="red"] {
+            --g: #800000;
+            --g-rgb: 128, 0, 0;
+            --y: #b30000;
+            --line: rgba(var(--g-rgb), .35);
+        }
+
         html,
         body {
             height: 100%;
@@ -809,7 +816,8 @@
                                     id="setStatDoorInit"></div>
                         </div>
                         <div class="mj-col">
-                            <div class="form-row"><label>Activer Hack ?</label><select class="form-input" id="setHack">
+                            <div class="form-row"><label>Activer Hack ?</label><select class="form-input"
+                                    id="setHackAtStart">
                                     <option value="true">Oui</option>
                                     <option value="false">Non</option>
                                 </select></div>
@@ -839,6 +847,7 @@
                                     <option value="green">Vert (Classique)</option>
                                     <option value="amber">Ambre</option>
                                     <option value="blue">Bleu (Système)</option>
+                                    <option value="red">Rouge</option>
                                 </select></div>
                             <div class="form-row"><label>Effets CRT</label><select class="form-input" id="setGlitch">
                                     <option value="true">Activés</option>
@@ -862,7 +871,6 @@
 
                             <div class="sys-actions">
                                 <button class="btn" onclick="window.App.exportData()">Exporter</button>
-                                <button class="btn" onclick="window.App.copyData()">Copier</button>
                                 <label class="btn" style="cursor:pointer">Importer<input id="fileImport" type="file"
                                         hidden onchange="window.App.importData(this)"></label>
                                 <button class="btn btn-reset" onclick="window.App.reset()">Reset Usine</button>
@@ -968,16 +976,25 @@
                 document.querySelectorAll('.tab-btn').forEach(e => e.classList.remove('active'));
                 event.target.classList.add('active');
             },
-            populate: () => {
-                const d = localStorage.getItem('ft_v34');
-                if (d) DATA = { ...DEF, ...JSON.parse(d) };
+            populate: (fromStorage = true) => {
+                if (fromStorage) {
+                    const d = localStorage.getItem('ft_v34');
+                    // FIX: Si on importe, on NE VEUT PAS écraser DATA avec localStorage
+                    if (d) DATA = { ...DEF, ...JSON.parse(d) };
+                }
 
                 const getVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
                 getVal('setDoorName', DATA.doorName || "SAS PRINCIPAL");
                 getVal('setStatDoorInit', DATA.doorState);
-                getVal('setHasDoor', DATA.hasDoor.toString()); getVal('setGamePwd', DATA.pwd); getVal('setGateOn', DATA.gate.toString());
+                // alert("DEBUG PWD IMPORT: " + DATA.pwd); // Removed debug
+                getVal('setHasDoor', DATA.hasDoor.toString()); getVal('setPwd', DATA.pwd); getVal('setGateOn', DATA.gate.toString());
                 getVal('setHackAtStart', DATA.hackAtStart.toString()); getVal('setTheme', DATA.theme); getVal('setAdminPwd', DATA.adminPwd || "");
                 getVal('setHackTries', DATA.hackTries); getVal('setWordMode', DATA.wordMode || 'securite');
+
+                // FIX: Ajout des mappings manquants pour éviter la perte au save
+                getVal('setSfx', (DATA.sfx !== false).toString());
+                getVal('setGlitch', (DATA.glitch !== false).toString());
+                getVal('setBootAlways', (DATA.bootAlways === true).toString());
 
                 const customArea = document.getElementById('setCustomWords');
                 if (customArea) customArea.value = (DATA.customWords || []).join('\n');
@@ -990,7 +1007,7 @@
             save: () => {
                 const getVal = (id) => document.getElementById(id)?.value;
                 DATA.doorName = getVal('setDoorName'); DATA.doorState = getVal('setStatDoorInit');
-                DATA.hasDoor = (getVal('setHasDoor') === 'true'); DATA.gate = (getVal('setGateOn') === 'true'); DATA.pwd = getVal('setGamePwd');
+                DATA.hasDoor = (getVal('setHasDoor') === 'true'); DATA.gate = (getVal('setGateOn') === 'true'); DATA.pwd = getVal('setPwd');
                 DATA.hackAtStart = (getVal('setHackAtStart') === 'true'); DATA.hackTries = parseInt(getVal('setHackTries')); DATA.theme = getVal('setTheme'); DATA.adminPwd = getVal('setAdminPwd');
                 DATA.sfx = (getVal('setSfx') === 'true'); DATA.glitch = (getVal('setGlitch') === 'true'); DATA.bootAlways = (getVal('setBootAlways') === 'true');
 
@@ -999,6 +1016,8 @@
                     DATA.customWords = raw.split('\n').map(s => s.trim().toUpperCase()).filter(s => s.length > 0);
                 }
                 window.App.save(); alert("Sauvegardé"); window.Admin.close();
+                // FIX: Redémarrage auto pour appliquer les changements (notamment l'import de données)
+                window.App.softReboot();
             },
         };
 
@@ -1023,7 +1042,8 @@
                 if (validPool.length < 12) validPool = pool;
 
                 let words = [];
-                while (words.length < 12) {
+                const maxWords = Math.min(12, validPool.length);
+                while (words.length < maxWords) {
                     let rw = validPool[Math.floor(Math.random() * validPool.length)];
                     if (!words.includes(rw)) words.push(rw);
                 }
@@ -1092,6 +1112,7 @@
 
                 const log = document.createElement('div'); log.id = 'hackLog'; log.className = "hack-log"; c.appendChild(log);
 
+                if (window.Hack.interval) clearInterval(window.Hack.interval);
                 window.Hack.interval = setInterval(() => {
                     const els = document.querySelectorAll('.hack-char');
                     if (els.length > 0) {
@@ -1149,8 +1170,12 @@
                 const safeSet = (id, v) => { const el = document.getElementById(id); if (el) el.innerText = v; };
                 document.documentElement.setAttribute('data-theme', DATA.theme);
                 document.body.classList.toggle('glitch-active', DATA.glitch !== false);
-                let hue = 85; if (DATA.theme === 'amber') hue = 40; if (DATA.theme === 'blue') hue = 180;
-                const filter = `brightness(0) saturate(100%) invert(57%) sepia(97%) saturate(3600%) hue-rotate(${hue}deg) brightness(118%) contrast(119%) drop-shadow(0 0 5px var(--g))`;
+                let hue = 85;
+                let bright = 118;
+                if (DATA.theme === 'amber') hue = 40;
+                if (DATA.theme === 'blue') hue = 180;
+                if (DATA.theme === 'red') { hue = -38; bright = 80; }
+                const filter = `brightness(0) saturate(100%) invert(57%) sepia(97%) saturate(3600%) hue-rotate(${hue}deg) brightness(${bright}%) contrast(119%) drop-shadow(0 0 5px var(--g))`;
                 document.querySelectorAll('img').forEach(img => img.style.filter = filter);
 
                 const banner = document.getElementById('banner'); banner.innerText = DATA.machine; banner.contentEditable = STATE.editing; banner.style.borderBottom = STATE.editing ? "1px dashed var(--g)" : "none"; banner.onblur = () => { DATA.machine = banner.innerText; window.App.save(); };
@@ -1167,15 +1192,119 @@
                 const h = document.getElementById('helpBox');
                 if (h) { h.innerHTML = ""; (DATA.help || []).forEach((txt, i) => { const row = document.createElement('div'); row.style.marginBottom = "4px"; row.style.display = "flex"; row.style.justifyContent = "space-between"; const span = document.createElement('span'); span.innerText = txt; if (STATE.editing) { span.contentEditable = true; span.style.borderBottom = "1px dashed var(--line)"; span.style.flex = "1"; span.onblur = () => { DATA.help[i] = span.innerText; window.App.save(); }; const del = document.createElement('span'); del.innerText = "[X]"; del.className = "btn-del"; del.style.marginLeft = "5px"; del.onclick = () => { DATA.help.splice(i, 1); window.App.save(); window.App.sync(); }; row.appendChild(span); row.appendChild(del); } else { row.appendChild(span); } h.appendChild(row); }); if (STATE.editing) { const add = document.createElement('div'); add.className = "btn-add"; add.style.padding = "4px"; add.style.marginTop = "8px"; add.innerText = "+ AIDE"; add.onclick = () => { DATA.help.push("Nouvelle info..."); window.App.save(); window.App.sync(); }; h.appendChild(add); } }
             },
-            reset: () => { if (confirm("Reset total des données ?")) { localStorage.removeItem('ft_v34'); DATA = JSON.parse(JSON.stringify(DEF)); window.App.softReboot(); } },
-            softReboot: () => { document.getElementById('uiLayer').style.opacity = 0; setTimeout(() => { document.getElementById('bootLayer').style.display = 'flex'; document.getElementById('bootLayer').style.opacity = 1; document.getElementById('bootStart').style.display = 'block'; document.getElementById('bootLoad').style.display = 'none'; STATE.view = 'boot'; STATE.path = []; STATE.currentFolder = null; STATE.currentFile = null; window.App.init(); }, 800); },
+            reset: () => {
+                if (confirm("Reset total des données ?")) {
+                    localStorage.removeItem('ft_v34');
+                    DATA = JSON.parse(JSON.stringify(DEF));
+                    window.App.softReboot();
+                }
+            },
+            softReboot: () => {
+                document.getElementById('uiLayer').style.opacity = 0;
+                setTimeout(() => {
+                    document.getElementById('bootLayer').style.display = 'flex';
+                    document.getElementById('bootLayer').style.opacity = 1;
+                    document.getElementById('bootStart').style.display = 'block';
+                    document.getElementById('bootLoad').style.display = 'none';
+                    STATE.view = 'boot'; STATE.path = []; STATE.currentFolder = null; STATE.currentFile = null;
+                    // FIX: Reload complétement la page pour éviter les résidus d'état
+                    window.location.reload();
+                }, 800);
+            },
             forceReload: () => { window.App.softReboot(); },
             playSound: (id) => { if (DATA.sfx === false) return; const s = document.getElementById(id); if (s) { s.currentTime = 0; s.play().catch(() => { }); } },
             toggleEdit: () => { STATE.editing = !STATE.editing; document.body.classList.toggle('editing', STATE.editing); window.Admin.close(); window.App.sync(); if (STATE.view === 'file' && STATE.currentFile) window.App.viewFile(STATE.currentFile); else window.App.render(); },
             powerOn: () => { window.App.playSound('s_boot'); document.getElementById('bootStart').style.display = 'none'; document.getElementById('bootLoad').style.display = 'block'; let p = 0; const bar = document.getElementById('bootBar'); const msg = document.getElementById('bootMsg'); const steps = [{ p: 20, t: "BIOS CHECK..." }, { p: 50, t: "LOADING..." }, { p: 80, t: "MEMORY OK" }, { p: 100, t: "STARTING..." }]; let i = 0; const next = () => { if (i < steps.length) { bar.style.width = steps[i].p + "%"; msg.innerText = steps[i].t; i++; setTimeout(next, 600); } else { setTimeout(() => { document.getElementById('bootLayer').style.opacity = 0; setTimeout(() => { document.getElementById('bootLayer').style.display = 'none'; document.getElementById('uiLayer').style.opacity = 1; window.App.bootTextSequence(); }, 1000); }, 500); } }; next(); },
             checkBoot: () => { const hasBooted = sessionStorage.getItem('ft_boot_once'); if (!hasBooted || DATA.bootAlways === true) { sessionStorage.setItem('ft_boot_once', 'true'); } else { document.getElementById('bootLayer').style.display = 'none'; document.getElementById('uiLayer').style.opacity = 1; if (DATA.gate) window.App.showLogin(); else window.App.goHome(); } },
             bootTextSequence: () => { const c = document.getElementById('console'); c.innerHTML = ""; window.Util.type(c, "ROBCO INDUSTRIES (TM) TERMLINK PROTOCOL\nCOPYRIGHT 2075-2077 ROBCO INDUSTRIES\n\n-SERVER 6-\n\nCONNEXION EN COURS...", 20, () => { setTimeout(() => { if (DATA.gate) window.App.showLogin(); else window.App.goHome(); }, 1000); }); },
-            showLogin: () => { STATE.view = 'login'; STATE.authInput = ""; const c = document.getElementById('console'); c.innerHTML = ""; window.Util.type(c, "\n\nAUTHENTIFICATION REQUISE\n\nVEUILLEZ ENTRER LE MOT DE PASSE :\n", 10, () => { const div = document.createElement('div'); div.className = 'prompt-line'; div.innerHTML = `> <span id="authDisplay"></span><span class="caret"></span><input id="realInput" class="hidden-input" autofocus>`; c.appendChild(div); const input = document.getElementById('realInput'); const display = document.getElementById('authDisplay'); let showTimeout; input.focus(); c.onclick = () => input.focus(); input.oninput = (e) => { window.App.playSound('s_type'); const val = input.value.toUpperCase(); input.value = val; let masked = ""; for (let i = 0; i < val.length - 1; i++) masked += "*"; if (val.length > 0) masked += val.slice(-1); display.innerText = masked; clearTimeout(showTimeout); showTimeout = setTimeout(() => { display.innerText = val.split('').map(() => '*').join(''); }, 600); }; input.onkeydown = (e) => { if (e.key === 'Enter') { const val = input.value.trim(); input.disabled = true; if (val === 'ADMINEDIT') { STATE.editing = true; document.body.classList.add('editing'); window.App.playSound('s_ok'); window.App.goHome(); return; } if (val === 'H' && DATA.hackAtStart) { window.Hack.start(); return; } if (val === (DATA.pwd || '').toUpperCase()) { window.App.playSound('s_ok'); window.Util.type(c, "\n\n> ACCÈS AUTORISÉ.\n> INITIALISATION...", 20, () => { STATE.view = 'main'; setTimeout(() => window.App.goHome(), 1000); }); } else { window.App.playSound('s_err'); window.Util.type(c, "\n> ACCÈS REFUSÉ.", 20, () => { STATE.wrongCount++; if (STATE.wrongCount >= (DATA.hackThreshold || 3)) { window.Util.type(c, "\n> VIOLATION. INTRUSION ? (O/N)", 20, () => { input.value = ""; display.innerText = ""; input.disabled = false; input.focus(); input.oninput = null; input.onkeydown = (ev) => { if (ev.key.toUpperCase() === 'O') window.Hack.start(); if (ev.key.toUpperCase() === 'N') { STATE.wrongCount = 0; window.App.showLogin(); } }; }); } else { setTimeout(window.App.showLogin, 1000); } }); } } }; }); },
+            showLogin: () => {
+                STATE.view = 'login'; STATE.authInput = "";
+                const c = document.getElementById('console'); c.innerHTML = "";
+
+                window.Util.type(c, "\n\nAUTHENTIFICATION REQUISE\n\nVEUILLEZ ENTRER LE MOT DE PASSE :\n", 10, () => {
+                    const div = document.createElement('div'); div.className = 'prompt-line';
+                    div.innerHTML = `> <span id="authDisplay"></span><span class="caret"></span><input id="realInput" class="hidden-input" autofocus>`;
+                    c.appendChild(div);
+
+                    const input = document.getElementById('realInput');
+                    const display = document.getElementById('authDisplay');
+                    let showTimeout;
+
+                    // Force focus
+                    input.focus();
+                    c.onclick = () => { input.focus(); };
+
+                    // Reset handlers to avoid stacking
+                    input.onkeydown = null;
+                    input.oninput = null;
+
+                    // Standard password input handler
+                    input.oninput = (e) => {
+                        window.App.playSound('s_type');
+                        const val = input.value.toUpperCase();
+                        input.value = val;
+                        let masked = "";
+                        for (let i = 0; i < val.length - 1; i++) masked += "*";
+                        if (val.length > 0) masked += val.slice(-1);
+                        display.innerText = masked;
+                        clearTimeout(showTimeout);
+                        showTimeout = setTimeout(() => { display.innerText = val.split('').map(() => '*').join(''); }, 600);
+                    };
+
+                    input.onkeydown = (e) => {
+                        if (e.key === 'Enter') {
+                            const val = input.value.trim();
+                            input.disabled = true; // Empêcher double soumission
+
+                            // Commandes spéciales
+                            if (val === 'ADMINEDIT') {
+                                STATE.editing = true; document.body.classList.add('editing');
+                                window.App.playSound('s_ok'); window.App.goHome(); return;
+                            }
+                            if (val === 'H' && DATA.hackAtStart) { window.Hack.start(); return; }
+
+                            // Check Password
+                            if (val === (DATA.pwd || '').toUpperCase()) {
+                                window.App.playSound('s_ok');
+                                window.Util.type(c, "\n\n> ACCÈS AUTORISÉ.\n> INITIALISATION...", 20, () => {
+                                    STATE.view = 'main'; setTimeout(() => window.App.goHome(), 1000);
+                                });
+                            } else {
+                                window.App.playSound('s_err');
+                                window.Util.type(c, "\n> ACCÈS REFUSÉ.", 20, () => {
+                                    STATE.wrongCount++;
+                                    // Hack Trigger
+                                    if (STATE.wrongCount >= (DATA.hackTries || 3)) {
+                                        window.Util.type(c, "\n> VIOLATION. INTRUSION ? (O/N)", 20, () => {
+                                            // Reset input for O/N answer
+                                            input.disabled = false;
+                                            input.value = "";
+                                            display.innerText = "";
+                                            input.focus();
+
+                                            // Remove previous handlers
+                                            input.oninput = null;
+
+                                            // Specific handler for O/N
+                                            input.onkeydown = (ev) => {
+                                                const key = ev.key.toUpperCase();
+                                                if (key === 'O' || key === 'Y') { // Support Y for QWERTY/English habits
+                                                    window.Hack.start();
+                                                } else if (key === 'N') {
+                                                    STATE.wrongCount = 0;
+                                                    window.App.showLogin();
+                                                }
+                                            };
+                                        });
+                                    } else {
+                                        setTimeout(window.App.showLogin, 1000);
+                                    }
+                                });
+                            }
+                        }
+                    };
+                });
+            },
             goHome: () => { STATE.view = 'main'; STATE.currentFolder = DATA.root; STATE.path = [{ label: "ACCUEIL", ref: DATA.root }]; window.App.render(); },
             enterFolder: (item) => { STATE.currentFolder = item.content; STATE.path.push({ label: item.label, ref: item.content }); window.App.render(); },
             goUp: () => { if (STATE.path.length > 1) { STATE.path.pop(); STATE.currentFolder = STATE.path[STATE.path.length - 1].ref; window.App.render(); } },
@@ -1338,17 +1467,6 @@
                     alert("Erreur Export : " + e.message);
                 }
             },
-            copyData: () => {
-                try {
-                    window.App.save();
-                    const json = JSON.stringify(DATA, null, 2);
-                    navigator.clipboard.writeText(json).then(() => {
-                        alert("Configuration copiée dans le presse-papier !");
-                    }).catch(err => {
-                        prompt("Copiez manuellement :", json);
-                    });
-                } catch (e) { alert("Erreur Copie : " + e.message); }
-            },
             importData: (input) => {
                 const f = input.files[0]; if (!f) return;
                 const r = new FileReader();
@@ -1358,7 +1476,7 @@
                         DATA = { ...DEF, ...JSON.parse(e.target.result) };
                         // Met à jour l'interface du panneau Admin pour vérification
                         if (window.Admin && document.getElementById('adminPanel').classList.contains('active')) {
-                            window.Admin.populate();
+                            window.Admin.populate(false); // FIX: false pour ne pas recharger du localStorage
                             alert("Configuration chargée. Cliquez sur VALIDER pour appliquer.");
                         } else {
                             // Si importé hors panneau admin (peu probable ici), on sauvegarde direct
