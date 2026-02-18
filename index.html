@@ -103,6 +103,11 @@
             text-shadow: 0 0 5px rgba(255, 0, 0, 1), 0 0 15px rgba(255, 0, 0, 0.8), 0 0 25px rgba(255, 0, 0, 0.4);
         }
 
+        html[data-theme="red"] .h {
+            color: #ff0000;
+            text-shadow: 0 0 10px rgba(255, 0, 0, 0.8);
+        }
+
 
         @keyframes flicker {
             0% {
@@ -1184,11 +1189,10 @@
                     bright = 100;
                     const redFilter = `brightness(0) saturate(100%) invert(18%) sepia(87%) saturate(6441%) hue-rotate(358deg) brightness(110%) contrast(120%) drop-shadow(0 0 8px rgba(255, 0, 0, 0.8))`;
                     document.querySelectorAll('img').forEach(img => img.style.filter = redFilter);
-                    return;
+                } else {
+                    const filter = `brightness(0) saturate(100%) invert(57%) sepia(97%) saturate(3600%) hue-rotate(${hue}deg) brightness(${bright}%) contrast(119%) drop-shadow(0 0 5px var(--g))`;
+                    document.querySelectorAll('img').forEach(img => img.style.filter = filter);
                 }
-                const filter = `brightness(0) saturate(100%) invert(57%) sepia(97%) saturate(3600%) hue-rotate(${hue}deg) brightness(${bright}%) contrast(119%) drop-shadow(0 0 5px var(--g))`;
-
-                document.querySelectorAll('img').forEach(img => img.style.filter = filter);
 
                 const banner = document.getElementById('banner'); banner.innerText = DATA.machine; banner.contentEditable = STATE.editing; banner.style.borderBottom = STATE.editing ? "1px dashed var(--g)" : "none"; banner.onblur = () => { DATA.machine = banner.innerText; window.App.save(); };
                 const sub = document.getElementById('pageSub'); if (STATE.editing) { sub.innerHTML = `UTILISATEUR : <span id="editUser" style="border-bottom:1px dashed var(--g); cursor:text">${DATA.user}</span>`; const eu = document.getElementById('editUser'); eu.contentEditable = true; eu.onblur = () => { DATA.user = eu.innerText; window.App.save(); }; } else { sub.innerText = `UTILISATEUR : ${DATA.user}`; }
