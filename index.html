@@ -988,104 +988,113 @@
     <!-- ADMIN PANEL -->
     <div class="overlay" id="adminPanel">
         <div class="admin-card">
-            <div class="h">PANNEAU DE CONTRÔLE — V10.0</div>
-            <div class="admin-tabs">
-                <button class="tab-btn active" onclick="window.Admin.tab('content')">Contenu</button>
-                <button class="tab-btn" onclick="window.Admin.tab('security')">Sécurité & Porte</button>
-                <button class="tab-btn" onclick="window.Admin.tab('system')">Système</button>
-                <button class="tab-btn" onclick="window.Admin.tab('credits')">Crédits</button>
+            <div class="admin-header">
+                <div class="h" style="border:none; margin:0">ROBCO CONFIG-OS V10.1</div>
+                <div class="tiny" id="adminClock">SYS_TIME: --:--:--</div>
             </div>
-            <div id="adminContent">
+
+            <div class="admin-sidebar">
+                <button class="tab-btn active" onclick="window.Admin.tab('content', event)">DONNÉES</button>
+                <button class="tab-btn" onclick="window.Admin.tab('security', event)">SÉCURITÉ</button>
+                <button class="tab-btn" onclick="window.Admin.tab('system', event)">SYSTÈME</button>
+                <button class="tab-btn" onclick="window.Admin.tab('credits', event)">CRÉDITS</button>
+            </div>
+
+            <div class="admin-body" id="adminContent">
                 <div id="tab-content" class="admin-content active">
-                    <div class="form-row" style="text-align:center; padding:30px; border:1px solid var(--line)">
-                        <div class="tiny" style="margin-bottom:20px">Pour modifier les données (Titres, Notes,
-                            Dossiers), activez le mode édition puis cliquez directement sur les éléments de l'interface.
+                    <div style="border:1px solid var(--line); padding:40px; text-align:center">
+                        <div class="h" style="border:none">MODE ÉDITION DIRECTE</div>
+                        <div style="margin-bottom:24px; opacity:0.8; line-height:1.6">
+                            L'interface principale accepte les modifications neuromorphiques.<br>
+                            Activez le mode édition pour modifier titres et fichiers dynamiquement.
                         </div>
-                        <button class="btn" style="width:100%" onclick="window.App.toggleEdit()">ACTIVER / DÉSACTIVER
+                        <button class="btn" style="width:100%" onclick="window.App.toggleEdit()">BASCULER
                             ÉDITION</button>
                     </div>
                 </div>
 
-
                 <div id="tab-security" class="admin-content">
                     <div class="two">
                         <div class="mj-col">
-                            <div class="form-row"><label>MDP Terminal</label><input class="form-input" id="setPwd">
-                            </div>
-                            <div class="form-row"><label>Verrouiller au boot ?</label><select class="form-input"
+                            <div class="form-row"><label>MOT DE PASSE TERMINAL</label><input class="form-input"
+                                    id="setPwd"></div>
+                            <div class="form-row"><label>VERROUILLAGE BOOT</label><select class="form-input"
                                     id="setGateOn">
-                                    <option value="true">Oui</option>
-                                    <option value="false">Non</option>
+                                    <option value="true">ACTIF</option>
+                                    <option value="false">INACTIF</option>
                                 </select></div>
-                            <div class="form-row"><label>Gérer une Porte ?</label><select class="form-input"
+                            <div class="form-row"><label>CONTRÔLE PORTE</label><select class="form-input"
                                     id="setHasDoor">
-                                    <option value="true">Oui</option>
-                                    <option value="false">Non</option>
+                                    <option value="true">OUI</option>
+                                    <option value="false">NON</option>
                                 </select></div>
-                            <div class="form-row"><label>Nom Porte</label><input class="form-input" id="setDoorName">
+                            <div class="form-row"><label>ID PORTE</label><input class="form-input" id="setDoorName">
                             </div>
-                            <div class="form-row"><label>État Init. (Fermé/Ouvert)</label><input class="form-input"
+                            <div class="form-row"><label>ÉTAT INITIAL</label><input class="form-input"
                                     id="setStatDoorInit"></div>
                         </div>
                         <div class="mj-col">
-                            <div class="form-row"><label>Activer Hack ?</label><select class="form-input"
+                            <div class="form-row"><label>PROTOCOLE INTRUSION</label><select class="form-input"
                                     id="setHackAtStart">
-                                    <option value="true">Oui</option>
-                                    <option value="false">Non</option>
+                                    <option value="true">HACK REQUIS</option>
+                                    <option value="false">ACCÈS LIBRE</option>
                                 </select></div>
-                            <div class="form-row"><label>Essais avant Hack</label><input class="form-input"
+                            <div class="form-row"><label>TENTATIVES MAX</label><input class="form-input"
                                     id="setHackTries" type="number"></div>
-                            <div class="form-row"><label>Thème Mots</label><select class="form-input" id="setWordMode">
-                                    <option value="securite">Sécurité</option>
-                                    <option value="standard">Informatique</option>
-                                    <option value="medical">Médical</option>
-                                    <option value="militaire">Militaire</option>
-                                    <option value="industriel">Industriel</option>
-                                    <option value="vault">Abri / Fallout</option>
-                                    <option value="custom">PERSONNALISÉ</option>
+                            <div class="form-row"><label>BANQUE DE DONNÉES</label><select class="form-input"
+                                    id="setWordMode">
+                                    <option value="securite">SÉCURITÉ</option>
+                                    <option value="standard">STANDARD</option>
+                                    <option value="medical">MÉDICAL</option>
+                                    <option value="militaire">MILITAIRE</option>
+                                    <option value="industriel">INDUSTRIEL</option>
+                                    <option value="vault">ABRI 404</option>
+                                    <option value="custom">CUSTOM.DAT</option>
                                 </select></div>
                         </div>
                     </div>
                     <div id="customWordsBlock" class="form-row"
                         style="margin-top:15px; display:none; border-top:1px dashed var(--line); padding-top:10px;">
-                        <label>Mots Personnalisés (Un par ligne)</label>
-                        <textarea id="setCustomWords" class="form-input" placeholder="MOT1&#10;MOT2&#10;..."></textarea>
+                        <label>CUSTOM.DAT DICTIONARY</label>
+                        <textarea id="setCustomWords" class="form-input" style="height:200px"></textarea>
                     </div>
                 </div>
+
                 <div id="tab-system" class="admin-content">
                     <div class="two">
                         <div class="mj-col">
-                            <div class="form-row"><label>Couleur</label><select class="form-input" id="setTheme">
-                                    <option value="green">Vert (Classique)</option>
-                                    <option value="amber">Ambre</option>
-                                    <option value="blue">Bleu (Système)</option>
-                                    <option value="red">Rouge</option>
+                            <div class="form-row"><label>FILTRE CHROMATIQUE</label><select class="form-input"
+                                    id="setTheme">
+                                    <option value="green">VERT ABRI</option>
+                                    <option value="amber">AMBRE VINTAGE</option>
+                                    <option value="blue">BLEU SYSTÈME</option>
+                                    <option value="red">ALERTE ROUGE</option>
                                 </select></div>
-                            <div class="form-row"><label>Effets CRT</label><select class="form-input" id="setGlitch">
-                                    <option value="true">Activés</option>
-                                    <option value="false">Désactivés</option>
+                            <div class="form-row"><label>SYNCHRO VERTICALE (CRT)</label><select class="form-input"
+                                    id="setGlitch">
+                                    <option value="true">ACTIVÉ</option>
+                                    <option value="false">DÉSACTIVÉ</option>
                                 </select></div>
                         </div>
                         <div class="mj-col">
-                            <div class="form-row"><label>Sons</label><select class="form-input" id="setSfx">
-                                    <option value="true">Activés</option>
-                                    <option value="false">Désactivés</option>
+                            <div class="form-row"><label>SORTIE AUDIO</label><select class="form-input" id="setSfx">
+                                    <option value="true">ON</option>
+                                    <option value="false">OFF</option>
                                 </select></div>
-                            <div class="form-row"><label>Toujours Booter ?</label><select class="form-input"
+                            <div class="form-row"><label>FORCE BOOT</label><select class="form-input"
                                     id="setBootAlways">
-                                    <option value="false">Non (Rapide)</option>
-                                    <option value="true">Oui (À chaque F5)</option>
+                                    <option value="false">SKIP</option>
+                                    <option value="true">ALWAYS</option>
                                 </select></div>
-                            <div class="form-row"><label>MDP Admin</label><input class="form-input" type="password"
-                                    id="setAdminPwd"></div>
+                            <div class="form-row"><label>MDP ADMIN [ROBCO]</label><input class="form-input"
+                                    type="password" id="setAdminPwd"></div>
 
                             <div class="divider"></div>
-
                             <div class="sys-actions">
-                                <button class="btn" onclick="window.App.exportData()">Exporter</button>
-                                <label class="btn" style="cursor:pointer">Importer<input id="fileImport" type="file"
+                                <button class="btn" onclick="window.App.exportData()">EXPORT</button>
+                                <label class="btn" style="cursor:pointer">IMPORT<input id="fileImport" type="file"
                                         hidden onchange="window.App.importData(this)"></label>
-                                <button class="btn btn-reset" onclick="window.App.reset()">Reset Usine</button>
+                                <button class="btn btn-reset" onclick="window.App.reset()">WIPE</button>
                             </div>
                         </div>
                     </div>
@@ -1093,32 +1102,59 @@
 
                 <div id="tab-credits" class="admin-content">
                     <div
-                        style="text-align:center; padding:20px; border:1px solid var(--line); background:rgba(0,0,0,0.5)">
-                        <div class="h" style="border:none; font-size:1.4rem; color:var(--g); margin-bottom:10px">
-                            DÉVELOPPÉ PAR RAPTOL</div>
-                        <div style="margin-bottom:20px; opacity:0.8">Merci d'utiliser ce terminal RobCo. Si vous
-                            appréciez mon travail, vous pouvez me soutenir ou rejoindre la communauté.</div>
+                        style="text-align:center; padding:32px; border:1px solid var(--line); background:rgba(var(--g-rgb), 0.03)">
+                        <div class="h" style="border:none; font-size:1.6rem; color:var(--g); margin-bottom:10px">CORE
+                            DEVELOPER: RAPTOL</div>
+                        <div style="margin-bottom:32px; opacity:0.8; font-size:0.9rem">ROBCO INDUSTRIES UNIFIED
+                            OPERATING SYSTEM SOFTWARE LICENSE VERSION 10.0</div>
 
-                        <div style="display:flex; flex-direction:column; gap:10px; max-width:300px; margin:0 auto">
+                        <div style="display:flex; flex-direction:column; gap:16px; max-width:350px; margin:0 auto">
                             <a href="https://buymeacoffee.com/raptol" target="_blank" class="mlink interactive"
-                                style="text-decoration:none; justify-content:center; border:1px solid var(--g)">
-                                <span>☕ SOUTENIR SUR BUYMEACOFFEE</span>
+                                style="text-decoration:none; justify-content:center; border:1px solid var(--g); padding:15px">
+                                <span>[ CAFFEINE CONTRIBUTION ]</span>
                             </a>
                             <a href="https://discord.gg/MaKsTRTHjX" target="_blank" class="mlink interactive"
-                                style="text-decoration:none; justify-content:center; border:1px solid var(--g)">
-                                <span>💬 REJOINDRE LE DISCORD</span>
+                                style="text-decoration:none; justify-content:center; border:1px solid var(--g); padding:15px">
+                                <span>[ COM-LINK ESTABLISHED ]</span>
                             </a>
                         </div>
-
-                        <div class="tiny" style="margin-top:30px; font-style:italic">"War... War never changes."</div>
+                        <div class="tiny" style="margin-top:40px; opacity:0.5">EST. 2077 - ALL RIGHTS RESERVED</div>
                     </div>
                 </div>
             </div>
-            <div style="margin-top:15px; text-align:right">
-                <button class="btn" onclick="window.Admin.save()">VALIDER</button>
-                <button class="btn" onclick="window.Admin.close()">FERMER</button>
+
+            <div class="admin-diag">
+                <div class="diag-box">
+                    <div class="diag-title">État Noyau</div>
+                    <div id="diagKernel">STABLE / ATOM-128</div>
+                </div>
+                <div class="diag-box">
+                    <div class="diag-title">Consommation RAM</div>
+                    <div id="diagRam">44KB / 512KB</div>
+                </div>
+                <div class="diag-box">
+                    <div class="diag-title">Temp. Processeur</div>
+                    <div id="diagTemp">42.8°C [NORMAL]</div>
+                </div>
+                <div class="diag-box"
+                    style="flex:1; font-size:0.65rem; opacity:0.5; font-family:'Courier New', monospace; line-height:1.2">
+                    LOADING MODULES...<br>
+                    NET_STACK: OK<br>
+                    CRT_DRV: OK<br>
+                    AUDIO_BUFF: OK<br>
+                    USER_AUTH: VERIFIED<br>
+                    READY.
+                </div>
+            </div>
+
+            <div class="admin-footer">
+                <button class="btn" style="border-width:2px; font-size:1rem" onclick="window.Admin.save()">CONFIRMER LES
+                    PARAMÈTRES</button>
+                <button class="btn" style="opacity:0.7" onclick="window.Admin.close()">ANNULER</button>
             </div>
         </div>
+    </div>
+    </div>
     </div>
 
     <audio id="s_click" preload="auto" src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg"></audio>
@@ -1200,16 +1236,33 @@
         };
 
         window.Admin = {
-            open: () => { if (DATA.adminPwd) { const p = prompt("MDP MJ:"); if (p !== DATA.adminPwd) return alert("Refusé"); } document.getElementById('adminPanel').classList.add('active'); window.Admin.populate(); },
+            open: () => {
+                if (DATA.adminPwd) { const p = prompt("MDP MJ:"); if (p !== DATA.adminPwd) return alert("Refusé"); }
+                document.getElementById('adminPanel').classList.add('active');
+                window.Admin.populate();
+                window.Admin.startDiags();
+            },
             close: () => {
-                document.getElementById('adminPanel').classList.remove('active'); window.App.save(); window.App.sync();
+                document.getElementById('adminPanel').classList.remove('active');
+                window.App.save();
+                window.App.sync();
+                if (window.Admin.diagTimer) clearInterval(window.Admin.diagTimer);
                 if (STATE.view === 'file' && STATE.currentFile) window.App.viewFile(STATE.currentFile); else window.App.render();
             },
-            tab: (id) => {
+            tab: (id, event) => {
                 document.querySelectorAll('.admin-content').forEach(e => e.classList.remove('active'));
                 document.getElementById('tab-' + id).classList.add('active');
                 document.querySelectorAll('.tab-btn').forEach(e => e.classList.remove('active'));
-                event.target.classList.add('active');
+                if (event) event.target.classList.add('active');
+            },
+            startDiags: () => {
+                if (window.Admin.diagTimer) clearInterval(window.Admin.diagTimer);
+                window.Admin.diagTimer = setInterval(() => {
+                    const now = new Date();
+                    document.getElementById('adminClock').innerText = `SYS_TIME: ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+                    document.getElementById('diagRam').innerText = `${Math.floor(40 + Math.random() * 10)}KB / 512KB`;
+                    document.getElementById('diagTemp').innerText = `${(40 + Math.random() * 5).toFixed(1)}°C [NORMAL]`;
+                }, 1000);
             },
             populate: (fromStorage = true) => {
                 if (fromStorage) {
