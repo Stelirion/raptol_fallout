@@ -1051,6 +1051,16 @@
                                     <option value="vault">ABRI</option>
                                     <option value="custom">CUSTOM.DAT</option>
                                 </select></div>
+                            <div class="form-row"><label>MODE FEEDBACK</label><select class="form-input"
+                                    id="setHackFeedback">
+                                    <option value="squares">SQUARES (V10)</option>
+                                    <option value="classic">CLASSIC (X/Y)</option>
+                                </select></div>
+                            <div class="form-row"><label>BONUS À RISQUE</label><select class="form-input"
+                                    id="setHackRisk">
+                                    <option value="true">ACTIF (RISQUÉ)</option>
+                                    <option value="false">INACTIF (SÛR)</option>
+                                </select></div>
                         </div>
                     </div>
                     <div id="customWordsBlock" class="form-row"
@@ -1192,6 +1202,7 @@
             statTitle: "STATUT ABRI",
             helpTitle: "PROTOCOLES",
             hackAtStart: false, hackTries: 3, hackDifficulty: "medium", wordMode: "vault",
+            hackFeedback: "squares", hackRiskBonuses: false,
             sfx: true, glitch: true, bootAlways: false, customWords: [],
             root: [
                 {
@@ -1314,6 +1325,7 @@
                 getVal('setHasDoor', DATA.hasDoor.toString()); getVal('setPwd', DATA.pwd); getVal('setGateOn', DATA.gate.toString());
                 getVal('setHackAtStart', DATA.hackAtStart.toString()); getVal('setTheme', DATA.theme); getVal('setAdminPwd', DATA.adminPwd || "");
                 getVal('setHackTries', DATA.hackTries); getVal('setWordMode', DATA.wordMode || 'securite');
+                getVal('setHackFeedback', DATA.hackFeedback || 'squares'); getVal('setHackRisk', (DATA.hackRiskBonuses === true).toString());
 
                 // FIX: Ajout des mappings manquants pour éviter la perte au save
                 getVal('setSfx', (DATA.sfx !== false).toString());
@@ -1333,6 +1345,7 @@
                 DATA.doorName = getVal('setDoorName'); DATA.doorState = getVal('setStatDoorInit');
                 DATA.hasDoor = (getVal('setHasDoor') === 'true'); DATA.gate = (getVal('setGateOn') === 'true'); DATA.pwd = getVal('setPwd');
                 DATA.hackAtStart = (getVal('setHackAtStart') === 'true'); DATA.hackTries = parseInt(getVal('setHackTries')); DATA.theme = getVal('setTheme'); DATA.adminPwd = getVal('setAdminPwd');
+                DATA.hackFeedback = getVal('setHackFeedback'); DATA.hackRiskBonuses = (getVal('setHackRisk') === 'true');
                 DATA.sfx = (getVal('setSfx') === 'true'); DATA.glitch = (getVal('setGlitch') === 'true'); DATA.bootAlways = (getVal('setBootAlways') === 'true');
 
                 if (DATA.wordMode === 'custom') {
@@ -1455,6 +1468,20 @@
                 window.App.playSound('s_ok');
                 const log = document.getElementById('hackLog');
 
+                // RISK MODE LOGIC
+                if (DATA.hackRiskBonuses) {
+                    const r = Math.random();
+                    if (r < 0.15) {
+                        log.innerHTML += `<div class="log-entry" style="color:var(--err)">> ÉCHEC DE PROTOCOLE.</div>`;
+                        log.scrollTop = log.scrollHeight;
+                        return;
+                    } else if (r < 0.20) {
+                        log.innerHTML += `<div class="log-entry" style="color:var(--err)">> RÉINITIALISATION TOTALE...</div>`;
+                        setTimeout(() => window.Hack.start(), 1500);
+                        return;
+                    }
+                }
+
                 if (Math.random() < 0.8) {
                     const remaining = s.words.filter(w => w !== s.solution);
                     if (remaining.length > 0) {
@@ -1475,7 +1502,40 @@
             check: (word, sol, el) => {
                 const s = window.Hack.state; if (s.tries <= 0) return;
                 const log = document.getElementById('hackLog'); if (el) el.classList.add('used');
-                if (word === sol) { clearInterval(window.Hack.interval); window.App.playSound('s_ok'); log.innerHTML = `<div class="log-entry">> MOT DE PASSE CORRECT.</div><div class="log-entry">> DÉCRYPTAGE EN COURS...</div><div class="log-entry">> ACCÈS AUTORISÉ.</div>`; setTimeout(() => { STATE.view = 'main'; window.App.goHome(); }, 2000); } else { s.tries--; window.App.playSound('s_err'); let bars = ""; for (let i = 0; i < s.tries; i++) bars += " ■"; document.getElementById('tryBars').innerText = bars; let matchBars = ""; for (let i = 0; i < sol.length; i++) { if (word[i] === sol[i]) matchBars += `<span class="res-square" style="color:var(--g)">■</span>`; else matchBars += `<span class="res-square" style="color:var(--err); opacity:0.8">■</span>`; } log.innerHTML += `<div class="log-entry">> ${word} : ÉCHEC.</div>`; log.innerHTML += `<div class="log-entry">> RESSEMBLANCE : ${matchBars}</div>`; log.innerHTML += `<div class="log-entry">> RESTANT : ${s.tries}</div>`; log.scrollTop = log.scrollHeight; if (s.tries <= 0) { clearInterval(window.Hack.interval); log.innerHTML += `<div class="log-entry" style="color:red">!!! TERMINAL VERROUILLÉ !!!</div>`; } }
+                if (word === sol) {
+                    clearInterval(window.Hack.interval); window.App.playSound('s_ok');
+                    log.innerHTML = `<div class="log-entry">> MOT DE PASSE CORRECT.</div><div class="log-entry">> DÉCRYPTAGE EN COURS...</div><div class="log-entry">> ACCÈS AUTORISÉ.</div>`;
+                    setTimeout(() => { STATE.view = 'main'; window.App.goHome(); }, 2000);
+                } else {
+                    s.tries--;
+                    window.App.playSound('s_err');
+                    let bars = ""; for (let i = 0; i < s.tries; i++) bars += " ■";
+                    document.getElementById('tryBars').innerText = bars;
+
+                    let correctCount = 0;
+                    let matchBars = "";
+                    for (let i = 0; i < sol.length; i++) {
+                        if (word[i] === sol[i]) {
+                            correctCount++;
+                            matchBars += `<span class="res-square" style="color:var(--g)">■</span>`;
+                        } else {
+                            matchBars += `<span class="res-square" style="color:var(--err); opacity:0.8">■</span>`;
+                        }
+                    }
+
+                    log.innerHTML += `<div class="log-entry">> ${word} : ÉCHEC.</div>`;
+                    if (DATA.hackFeedback === 'classic') {
+                        log.innerHTML += `<div class="log-entry">> RESSEMBLANCE : ${correctCount}/${sol.length}</div>`;
+                    } else {
+                        log.innerHTML += `<div class="log-entry">> RESSEMBLANCE : ${matchBars}</div>`;
+                    }
+
+                    log.scrollTop = log.scrollHeight;
+                    if (s.tries <= 0) {
+                        clearInterval(window.Hack.interval);
+                        log.innerHTML += `<div class="log-entry" style="color:red">!!! TERMINAL VERROUILLÉ !!!</div>`;
+                    }
+                }
             }
         };
 
