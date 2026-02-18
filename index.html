@@ -1138,8 +1138,8 @@
                     </div>
                 </div>
                 <div class="diag-box">
-                    <div class="diag-title">Banque Lexicale</div>
-                    <div id="diagWords">DATA: 0 MOTS</div>
+                    <div class="diag-title">Densité de Données</div>
+                    <div id="diagWords">0 MOTS ENREGISTRÉS</div>
                 </div>
                 <div class="diag-box">
                     <div class="diag-title">Métriques Système</div>
@@ -1281,21 +1281,24 @@
                 }, 2000);
             },
             updateStats: () => {
-                let fCount = 0, dCount = 0;
+                let fCount = 0, dCount = 0, wCount = 0;
                 const scan = (items) => {
                     items.forEach(it => {
-                        if (it.type === 'file') fCount++;
+                        if (it.type === 'file') {
+                            fCount++;
+                            if (it.content) {
+                                // Nettoyage simple pour compter les mots
+                                const words = it.content.trim().split(/\s+/).filter(w => w.length > 0);
+                                wCount += words.length;
+                            }
+                        }
                         else if (it.type === 'folder') { dCount++; scan(it.content || []); }
                     });
                 };
                 scan(DATA.root);
                 document.getElementById('diagFiles').innerText = fCount;
                 document.getElementById('diagFolders').innerText = dCount;
-
-                let wCount = 0;
-                if (DATA.wordMode === 'custom') wCount = (DATA.customWords || []).length;
-                else if (typeof BANKS !== 'undefined' && BANKS[DATA.wordMode]) wCount = BANKS[DATA.wordMode].length;
-                document.getElementById('diagWords').innerText = `DATA: ${wCount} MOTS`;
+                document.getElementById('diagWords').innerText = `${wCount} MOTS ENREGISTRÉS`;
             },
             populate: (fromStorage = true) => {
                 if (fromStorage) {
