@@ -1033,97 +1033,125 @@
                 </div>
 
                 <div id="tab-security" class="admin-content">
-                    <div class="two">
-                        <div class="mj-col">
-                            <div class="form-row"><label>MOT DE PASSE TERMINAL</label><input class="form-input"
-                                    id="setPwd"></div>
-                            <div class="form-row"><label>VERROUILLAGE BOOT</label><select class="form-input"
-                                    id="setGateOn">
-                                    <option value="true">ACTIF</option>
-                                    <option value="false">INACTIF</option>
-                                </select></div>
-                            <div class="form-row"><label>CONTRÔLE PORTE</label><select class="form-input"
-                                    id="setHasDoor">
-                                    <option value="true">OUI</option>
-                                    <option value="false">NON</option>
-                                </select></div>
-                            <div class="form-row"><label>ID PORTE</label><input class="form-input" id="setDoorName">
+                    <div class="admin-sub-cat">
+                        <div class="cat-header">ACCÈS PHYSIQUE & PORTES</div>
+                        <div class="two">
+                            <div class="mj-col">
+                                <div class="form-row"><label>MOT DE PASSE TERMINAL</label><input class="form-input"
+                                        id="setPwd"></div>
+                                <div class="form-row"><label>VERROUILLAGE BOOT</label><select class="form-input"
+                                        id="setGateOn">
+                                        <option value="true">ACTIF</option>
+                                        <option value="false">INACTIF</option>
+                                    </select></div>
                             </div>
-                            <div class="form-row"><label>ÉTAT INITIAL</label><input class="form-input"
-                                    id="setStatDoorInit"></div>
-                        </div>
-                        <div class="mj-col">
-                            <div class="form-row"><label>PROTOCOLE INTRUSION</label><select class="form-input"
-                                    id="setHackAtStart">
-                                    <option value="true">HACK REQUIS</option>
-                                    <option value="false">ACCÈS LIBRE</option>
-                                </select></div>
-                            <div class="form-row"><label>TENTATIVES MAX</label><input class="form-input"
-                                    id="setHackTries" type="number"></div>
-                            <div class="form-row"><label>BANQUE DE DONNÉES</label><select class="form-input"
-                                    id="setWordMode">
-                                    <option value="securite">SÉCURITÉ</option>
-                                    <option value="standard">STANDARD</option>
-                                    <option value="medical">MÉDICAL</option>
-                                    <option value="militaire">MILITAIRE</option>
-                                    <option value="industriel">INDUSTRIEL</option>
-                                    <option value="vault">ABRI</option>
-                                    <option value="custom">CUSTOM.DAT</option>
-                                </select></div>
-                            <div class="form-row"><label>MODE FEEDBACK</label><select class="form-input"
-                                    id="setHackFeedback">
-                                    <option value="squares">SQUARES (V10)</option>
-                                    <option value="classic">CLASSIC (X/Y)</option>
-                                </select></div>
-                            <div class="form-row"><label>BONUS À RISQUE</label><select class="form-input"
-                                    id="setHackRisk">
-                                    <option value="true">ACTIF (RISQUÉ)</option>
-                                    <option value="false">INACTIF (SÛR)</option>
-                                </select></div>
+                            <div class="mj-col">
+                                <div class="form-row"><label>CONTRÔLE PORTE</label><select class="form-input"
+                                        id="setHasDoor">
+                                        <option value="true">OUI</option>
+                                        <option value="false">NON</option>
+                                    </select></div>
+                                <div class="form-row"><label>ID PORTE</label><input class="form-input" id="setDoorName">
+                                </div>
+                                <div class="form-row"><label>ÉTAT INITIAL</label><input class="form-input"
+                                        id="setStatDoorInit"></div>
+                            </div>
                         </div>
                     </div>
-                    <div id="customWordsBlock" class="form-row"
-                        style="margin-top:15px; display:none; border-top:1px dashed var(--line); padding-top:10px;">
-                        <label>CUSTOM.DAT DICTIONARY</label>
-                        <textarea id="setCustomWords" class="form-input" style="height:200px"></textarea>
+
+                    <div class="admin-sub-cat">
+                        <div class="cat-header">PROTOCOLES DE DÉCRYPTAGE (HACKING)</div>
+                        <div class="two">
+                            <div class="mj-col">
+                                <div class="form-row"><label>PROTOCOLE INTRUSION</label><select class="form-input"
+                                        id="setHackAtStart">
+                                        <option value="true">HACK REQUIS</option>
+                                        <option value="false">ACCÈS LIBRE</option>
+                                    </select></div>
+                                <div class="form-row"><label>TENTATIVES MAX</label><input class="form-input"
+                                        id="setHackTries" type="number"></div>
+                                <div class="form-row"><label>BANQUE DE DONNÉES</label><select class="form-input"
+                                        id="setWordMode">
+                                        <option value="securite">SÉCURITÉ</option>
+                                        <option value="standard">STANDARD</option>
+                                        <option value="medical">MÉDICAL</option>
+                                        <option value="militaire">MILITAIRE</option>
+                                        <option value="industriel">INDUSTRIEL</option>
+                                        <option value="vault">ABRI</option>
+                                        <option value="custom">CUSTOM.DAT</option>
+                                    </select></div>
+                            </div>
+                            <div class="mj-col">
+                                <div class="form-row"><label>MODE FEEDBACK</label><select class="form-input"
+                                        id="setHackFeedback">
+                                        <option value="squares">SQUARES (V10)</option>
+                                        <option value="classic">CLASSIC (X/Y)</option>
+                                    </select></div>
+                                <div class="form-row"><label>BONUS À RISQUE</label><select class="form-input"
+                                        id="setHackRisk">
+                                        <option value="true">ACTIF (RISQUÉ)</option>
+                                        <option value="false">INACTIF (SÛR)</option>
+                                    </select></div>
+                            </div>
+                        </div>
+                        <div id="customWordsBlock" class="form-row"
+                            style="margin-top:15px; display:none; border-top:1px dashed var(--line); padding-top:10px;">
+                            <label>DICTIONNAIRE CUSTOM.DAT</label>
+                            <textarea id="setCustomWords" class="form-input" style="height:150px"></textarea>
+                        </div>
                     </div>
                 </div>
 
                 <div id="tab-system" class="admin-content">
-                    <div class="two">
-                        <div class="mj-col">
-                            <div class="form-row"><label>FILTRE CHROMATIQUE</label><select class="form-input"
-                                    id="setTheme">
-                                    <option value="green">VERT ABRI</option>
-                                    <option value="amber">AMBRE VINTAGE</option>
-                                    <option value="blue">BLEU SYSTÈME</option>
-                                    <option value="red">ALERTE ROUGE</option>
-                                </select></div>
-                            <div class="form-row"><label>SYNCHRO VERTICALE (CRT)</label><select class="form-input"
-                                    id="setGlitch">
-                                    <option value="true">ACTIVÉ</option>
-                                    <option value="false">DÉSACTIVÉ</option>
-                                </select></div>
+                    <div class="admin-sub-cat">
+                        <div class="cat-header">INTERFACE ET RENDU VISUEL</div>
+                        <div class="two">
+                            <div class="mj-col">
+                                <div class="form-row"><label>FILTRE CHROMATIQUE</label><select class="form-input"
+                                        id="setTheme">
+                                        <option value="green">VERT ABRI</option>
+                                        <option value="amber">AMBRE VINTAGE</option>
+                                        <option value="blue">BLEU SYSTÈME</option>
+                                        <option value="red">ALERTE ROUGE</option>
+                                    </select></div>
+                                <div class="form-row"><label>SYNCHRO VERTICALE (CRT)</label><select class="form-input"
+                                        id="setGlitch">
+                                        <option value="true">ACTIVÉ</option>
+                                        <option value="false">DÉSACTIVÉ</option>
+                                    </select></div>
+                            </div>
+                            <div class="mj-col">
+                                <div class="form-row"><label>SORTIE AUDIO</label><select class="form-input" id="setSfx">
+                                        <option value="true">ON</option>
+                                        <option value="false">OFF</option>
+                                    </select></div>
+                            </div>
                         </div>
-                        <div class="mj-col">
-                            <div class="form-row"><label>SORTIE AUDIO</label><select class="form-input" id="setSfx">
-                                    <option value="true">ON</option>
-                                    <option value="false">OFF</option>
-                                </select></div>
-                            <div class="form-row"><label>FORCE BOOT</label><select class="form-input"
-                                    id="setBootAlways">
-                                    <option value="false">SKIP</option>
-                                    <option value="true">ALWAYS</option>
-                                </select></div>
-                            <div class="form-row"><label>MDP ADMIN</label><input class="form-input" type="password"
-                                    id="setAdminPwd"></div>
+                    </div>
 
-                            <div class="divider"></div>
-                            <div class="sys-actions">
-                                <button class="btn" onclick="window.App.exportData()">EXPORT</button>
-                                <label class="btn" style="cursor:pointer">IMPORT<input id="fileImport" type="file"
-                                        hidden onchange="window.App.importData(this)"></label>
-                                <button class="btn btn-reset" onclick="window.App.reset()">RESET</button>
+                    <div class="admin-sub-cat">
+                        <div class="cat-header">CORE OS & SÉCURITÉ ADMIN</div>
+                        <div class="two">
+                            <div class="mj-col">
+                                <div class="form-row"><label>FORCE BOOT (IGNORE CACHE)</label><select class="form-input"
+                                        id="setBootAlways">
+                                        <option value="false">SKIP</option>
+                                        <option value="true">ALWAYS</option>
+                                    </select></div>
+                                <div class="form-row"><label>MOT DE PASSE ADMIN</label><input class="form-input"
+                                        type="password" id="setAdminPwd"></div>
+                            </div>
+                            <div class="mj-col">
+                                <div class="sys-actions" style="margin-top:0">
+                                    <button class="btn" style="width:100%; margin-bottom:8px"
+                                        onclick="window.App.exportData()">EXPORT SYSTÈME</button>
+                                    <label class="btn"
+                                        style="cursor:pointer; display:block; width:100%; text-align:center; margin-bottom:8px">IMPORT
+                                        SYSTÈME<input id="fileImport" type="file" hidden
+                                            onchange="window.App.importData(this)"></label>
+                                    <button class="btn btn-reset" style="width:100%"
+                                        onclick="window.App.reset()">RÉINITIALISATION USINE</button>
+                                </div>
                             </div>
                         </div>
                     </div>
