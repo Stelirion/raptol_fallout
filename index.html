@@ -1293,8 +1293,8 @@
                 document.getElementById('diagFolders').innerText = dCount;
 
                 let wCount = 0;
-                if (DATA.wordMode === 'custom') wCount = DATA.customWords.length;
-                else if (typeof WORDS !== 'undefined' && WORDS[DATA.wordMode]) wCount = WORDS[DATA.wordMode].length;
+                if (DATA.wordMode === 'custom') wCount = (DATA.customWords || []).length;
+                else if (typeof BANKS !== 'undefined' && BANKS[DATA.wordMode]) wCount = BANKS[DATA.wordMode].length;
                 document.getElementById('diagWords').innerText = `DATA: ${wCount} MOTS`;
             },
             populate: (fromStorage = true) => {
