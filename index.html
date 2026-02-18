@@ -1275,7 +1275,7 @@
                 window.Admin.diagTimer = setInterval(() => {
                     const now = new Date();
                     document.getElementById('adminClock').innerText = `SYS_TIME: ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
-                    document.getElementById('diagRam').innerText = `${Math.floor(40 + Math.random() * 10)}KB`;
+                    document.getElementById('diagRam').innerText = `${Math.floor(40 + Math.random() * 10)}KB / 512KB`;
                     document.getElementById('diagTemp').innerText = `${((40 + Math.random() * 5).toFixed(1))}°C`;
                     window.Admin.updateStats();
                 }, 2000);
