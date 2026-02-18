@@ -716,15 +716,70 @@
             padding-bottom: 5px;
         }
 
-        /* --- CREDITS FOOTER --- */
-        .credits-footer {
-            margin-top: auto;
-            border-top: 1px solid var(--line);
-            padding-top: 8px;
-            font-size: 0.65rem;
+        /* --- MODAL SYSTEM --- */
+        #modalOverlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 5000;
+            display: none;
+            place-items: center;
+            padding: 20px;
+            backdrop-filter: blur(4px);
+        }
+
+        #modalCard {
+            width: 100%;
+            max-width: 450px;
+            background: #000;
+            border: 2px solid var(--line);
+            padding: 24px;
+            border-radius: 4px;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 1);
+            position: relative;
+        }
+
+        .modal-msg {
+            font-size: 1.1rem;
+            line-height: 1.5;
+            margin-bottom: 30px;
             text-align: center;
-            opacity: 0.5;
+        }
+
+        .modal-btns {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        /* --- TOAST SYSTEM --- */
+        #toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #000;
+            color: var(--g);
+            border: 1px solid var(--g);
+            padding: 10px 24px;
+            z-index: 6000;
+            font-weight: bold;
             letter-spacing: 1px;
+            display: none;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+            animation: slide-up 0.3s ease;
+        }
+
+        @keyframes slide-up {
+            from {
+                bottom: -50px;
+                opacity: 0;
+            }
+
+            to {
+                bottom: 30px;
+                opacity: 1;
+            }
         }
     </style>
 </head>
@@ -1228,11 +1283,11 @@
                 if (h) { h.innerHTML = ""; (DATA.help || []).forEach((txt, i) => { const row = document.createElement('div'); row.style.marginBottom = "4px"; row.style.display = "flex"; row.style.justifyContent = "space-between"; const span = document.createElement('span'); span.innerText = txt; if (STATE.editing) { span.contentEditable = true; span.style.borderBottom = "1px dashed var(--line)"; span.style.flex = "1"; span.onblur = () => { DATA.help[i] = span.innerText; window.App.save(); }; const del = document.createElement('span'); del.innerText = "[X]"; del.className = "btn-del"; del.style.marginLeft = "5px"; del.onclick = () => { DATA.help.splice(i, 1); window.App.save(); window.App.sync(); }; row.appendChild(span); row.appendChild(del); } else { row.appendChild(span); } h.appendChild(row); }); if (STATE.editing) { const add = document.createElement('div'); add.className = "btn-add"; add.style.padding = "4px"; add.style.marginTop = "8px"; add.innerText = "+ AIDE"; add.onclick = () => { DATA.help.push("Nouvelle info..."); window.App.save(); window.App.sync(); }; h.appendChild(add); } }
             },
             reset: () => {
-                if (confirm("Reset total des données ?")) {
+                window.App.confirm("RÉINITIALISER TOUTES LES DONNÉES DU TERMINAL ?", () => {
                     localStorage.removeItem('ft_v34');
                     DATA = JSON.parse(JSON.stringify(DEF));
                     window.App.softReboot();
-                }
+                });
             },
             softReboot: () => {
                 document.getElementById('uiLayer').style.opacity = 0;
@@ -1499,7 +1554,7 @@
                     }, 5000); // FIX: 5s délai pour Playwright/Environnements lents
 
                 } catch (e) {
-                    alert("Erreur Export : " + e.message);
+                    window.App.alert("ERREUR D'EXPORTATION : " + e.message);
                 }
             },
             importData: (input) => {
@@ -1507,19 +1562,50 @@
                 const r = new FileReader();
                 r.onload = (e) => {
                     try {
-                        // Charge les données en mémoire SANS sauvegarder ni rebooter
                         DATA = { ...DEF, ...JSON.parse(e.target.result) };
-                        // Met à jour l'interface du panneau Admin pour vérification
                         if (window.Admin && document.getElementById('adminPanel').classList.contains('active')) {
-                            window.Admin.populate(false); // FIX: false pour ne pas recharger du localStorage
-                            alert("Configuration chargée. Cliquez sur VALIDER pour appliquer.");
+                            window.Admin.populate(false);
+                            window.App.alert("CONFIGURATION CHARGÉE AVEC SUCCÈS.");
                         } else {
-                            // Si importé hors panneau admin (peu probable ici), on sauvegarde direct
                             window.App.save(); window.App.forceReload();
                         }
-                    } catch (err) { alert("Erreur JSON : " + err.message); }
+                    } catch (err) { window.App.alert("ERREUR JSON : " + err.message); }
                 };
                 r.readAsText(f);
+            },
+
+            // CUSTOM NOTIFICATIONS SYSTEM
+            alert: (msg, cb = null) => {
+                const overlay = document.getElementById('modalOverlay');
+                const box = document.getElementById('modalMsg');
+                const btns = document.getElementById('modalBtns');
+                box.innerText = msg; btns.innerHTML = "";
+                const ok = document.createElement('button'); ok.className = "btn"; ok.style.width = "100px"; ok.innerText = "OK";
+                ok.onclick = () => { overlay.style.display = 'none'; if (cb) cb(); };
+                btns.appendChild(ok); overlay.style.display = 'grid'; ok.focus();
+            },
+            confirm: (msg, onYes, onNo = null) => {
+                const overlay = document.getElementById('modalOverlay');
+                const box = document.getElementById('modalMsg');
+                const btns = document.getElementById('modalBtns');
+                box.innerText = msg; btns.innerHTML = "";
+                const yes = document.createElement('button'); yes.className = "btn"; yes.innerText = "OUI [ENTRÉE]";
+                const no = document.createElement('button'); no.className = "btn"; no.innerText = "NON [ÉCHAP]";
+                yes.onclick = () => { overlay.style.display = 'none'; if (onYes) onYes(); };
+                no.onclick = () => { overlay.style.display = 'none'; if (onNo) onNo(); };
+                btns.appendChild(yes); btns.appendChild(no);
+                overlay.style.display = 'grid'; yes.focus();
+                // Keyboard shortcut handling for confirm
+                const handler = (e) => {
+                    if (e.key === 'Enter') { yes.click(); document.removeEventListener('keydown', handler); }
+                    if (e.key === 'Escape') { no.click(); document.removeEventListener('keydown', handler); }
+                };
+                document.addEventListener('keydown', handler);
+            },
+            toast: (msg) => {
+                const el = document.getElementById('toast');
+                el.innerText = msg; el.style.display = 'block';
+                setTimeout(() => { el.style.display = 'none'; }, 3000);
             },
         };
 
